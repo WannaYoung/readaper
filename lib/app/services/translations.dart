@@ -65,6 +65,20 @@ class AppTranslations extends Translations {
           'logoutNeedRelogin': '退出后需要重新登录',
           'exit': '退出',
 
+          // 同步设置
+          'syncSettings': '同步设置',
+          'autoSync': '自动同步',
+          'syncFrequency': '同步频率',
+          'syncNow': '立即同步',
+          'lastSync': '上次同步',
+          'nextSync': '下次同步',
+          'manual': '手动',
+          'hour1': '1 小时',
+          'hour6': '6 小时',
+          'hour12': '12 小时',
+          'day1': '1 天',
+          'syncCompleted': '同步完成',
+
           // 其它（代码中已使用 .tr）
           'readaper': 'Readaper',
           'filter': '筛选',
@@ -134,6 +148,20 @@ class AppTranslations extends Translations {
           'confirmLogout': '確認登出',
           'logoutNeedRelogin': '登出後需要重新登入',
           'exit': '登出',
+
+          // 同步设置
+          'syncSettings': '同步設定',
+          'autoSync': '自動同步',
+          'syncFrequency': '同步頻率',
+          'syncNow': '立即同步',
+          'lastSync': '上次同步',
+          'nextSync': '下次同步',
+          'manual': '手動',
+          'hour1': '1 小時',
+          'hour6': '6 小時',
+          'hour12': '12 小時',
+          'day1': '1 天',
+          'syncCompleted': '同步完成',
 
           // 其它（代码中已使用 .tr）
           'readaper': 'Readaper',
@@ -205,6 +233,20 @@ class AppTranslations extends Translations {
           'confirmLogout': 'Confirm Logout',
           'logoutNeedRelogin': 'Logout and need to login again',
           'exit': 'Exit',
+
+          // Sync Settings
+          'syncSettings': 'Sync Settings',
+          'autoSync': 'Auto Sync',
+          'syncFrequency': 'Sync Frequency',
+          'syncNow': 'Sync Now',
+          'lastSync': 'Last Sync',
+          'nextSync': 'Next Sync',
+          'manual': 'Manual',
+          'hour1': '1 hour',
+          'hour6': '6 hours',
+          'hour12': '12 hours',
+          'day1': '1 day',
+          'syncCompleted': 'Sync completed',
 
           // 其它（代码中已使用 .tr）
           'readaper': 'Readaper',

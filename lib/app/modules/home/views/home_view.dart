@@ -191,6 +191,8 @@ class HomeView extends GetView<HomeController> {
                     i,
                     controller.sidebarItems[i]['icon'] as IconData,
                     (controller.sidebarItems[i]['title'] as String).tr,
+                    controller.getCountByKey(
+                        controller.sidebarItems[i]['title'] as String),
                     controller.onSidebarTap,
                   ),
                   if (i != controller.sidebarItems.length - 1)
@@ -203,8 +205,8 @@ class HomeView extends GetView<HomeController> {
   }
 
   /// 侧边栏单项
-  Widget _sidebarTile(
-      int index, IconData icon, String text, Function(int, String) onTap) {
+  Widget _sidebarTile(int index, IconData icon, String text, int count,
+      Function(int, String) onTap) {
     return SizedBox(
       height: 50,
       child: Material(
@@ -224,6 +226,20 @@ class HomeView extends GetView<HomeController> {
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
+              if (count > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(40, 0, 0, 0),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    count.toString(),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              const SizedBox(width: 12),
             ],
           ),
         ),

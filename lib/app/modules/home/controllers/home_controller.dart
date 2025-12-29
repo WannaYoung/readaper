@@ -2,8 +2,10 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import '../providers/bookmark_provider.dart';
 import '../models/bookmark.dart';
+import '../models/bookmark_counts.dart';
 import 'package:flutter/material.dart';
 import '../../../network/api_client.dart';
+import '../../../services/bookmark_db_service.dart';
 
 /// 首页控制器
 ///
@@ -27,6 +29,9 @@ class HomeController extends GetxController {
   final isLoadingMore = false.obs;
   final drawerOpen = false.obs;
   final isSidebarOpen = false.obs;
+
+  final BookmarkDbService _db = BookmarkDbService();
+  final counts = const BookmarkCounts().obs;
 
   void _showError(Object e) {
     if (e is ApiException) {
@@ -56,6 +61,66 @@ class HomeController extends GetxController {
     // 监听滚动，触底自动加载更多
     scrollController.addListener(_handleScroll);
     fetchArticles();
+
+    // 首帧后启动本地统计刷新与全量同步（避免阻塞页面首屏渲染）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      refreshCounts();
+      syncAllBookmarks();
+    });
+  }
+
+  /// 刷新侧边栏分类数量
+  Future<void> refreshCounts() async {
+    try {
+      counts.value = await _db.getCounts();
+    } catch (_) {
+      // 统计失败时不影响主流程
+    }
+  }
+
+  /// 全量同步书签到本地数据库
+  ///
+  /// - 由于后端没有提供统计接口，本地统计需要尽可能全量的数据
+  /// - 使用分页拉取，避免一次性请求过大
+  Future<void> syncAllBookmarks() async {
+    const int limit = 50;
+    int offset = 0;
+    try {
+      while (true) {
+        final params = <String, dynamic>{
+          'limit': limit,
+          'offset': offset,
+          'sort': '-created',
+        };
+        final list = await provider.getBookmarksWithParams(params);
+        if (list.isEmpty) break;
+        await _db.upsertBookmarks(list);
+        offset += limit;
+        if (list.length < limit) break;
+      }
+    } catch (_) {
+      // 同步失败不影响当前页面展示
+    } finally {
+      await refreshCounts();
+    }
+  }
+
+  int getCountByKey(String key) {
+    final val = counts.value;
+    switch (key) {
+      case 'all':
+        return val.all;
+      case 'unread':
+        return val.unread;
+      case 'archive':
+        return val.archived;
+      case 'favorite':
+        return val.favorite;
+      case 'video':
+        return val.video;
+      default:
+        return 0;
+    }
   }
 
   @override
@@ -103,6 +168,8 @@ class HomeController extends GetxController {
       if (filterIsMarked != null) params['is_marked'] = filterIsMarked;
       if (filterType != null) params['type'] = filterType;
       final newList = await provider.getBookmarksWithParams(params);
+      // 写入本地数据库，用于侧边栏数量统计
+      await _db.upsertBookmarks(newList);
       if (refresh) {
         articles.assignAll(newList);
       } else {
@@ -113,6 +180,7 @@ class HomeController extends GetxController {
       } else {
         _offset += _pageLimit;
       }
+      await refreshCounts();
     } catch (e) {
       _showError(e);
     } finally {
@@ -138,6 +206,12 @@ class HomeController extends GetxController {
       }
       articles.refresh();
       Get.snackbar('success'.tr, value ? 'favorited'.tr : 'unfavorited'.tr);
+
+      final id = bookmark.id;
+      if (id != null && id.isNotEmpty) {
+        await _db.updateBookmark(id, isMarked: value);
+        await refreshCounts();
+      }
     } catch (e) {
       _showError(e);
     }
@@ -160,6 +234,12 @@ class HomeController extends GetxController {
       }
       articles.refresh();
       Get.snackbar('success'.tr, value ? 'archived'.tr : 'unarchived'.tr);
+
+      final id = bookmark.id;
+      if (id != null && id.isNotEmpty) {
+        await _db.updateBookmark(id, isArchived: value);
+        await refreshCounts();
+      }
     } catch (e) {
       _showError(e);
     }
@@ -172,6 +252,12 @@ class HomeController extends GetxController {
       articles.removeWhere((b) => b.id == bookmark.id);
       articles.refresh();
       Get.snackbar('success'.tr, 'deleted'.tr);
+
+      final id = bookmark.id;
+      if (id != null && id.isNotEmpty) {
+        await _db.deleteBookmark(id);
+        await refreshCounts();
+      }
     } catch (e) {
       _showError(e);
     }

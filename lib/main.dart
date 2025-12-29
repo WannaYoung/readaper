@@ -9,6 +9,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app/services/localization_service.dart';
 import 'app/services/theme_service.dart';
+import 'app/services/bookmark_sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,9 @@ void main() async {
   // 初始化本地化服务
   final localizationService = LocalizationService();
   final themeService = ThemeService();
+
+  // 初始化书签同步服务（前台定时）
+  BookmarkSyncService().init();
 
   runApp(GetMaterialApp(
     title: "Readaper",

@@ -14,13 +14,22 @@ class SettingView extends GetView<SettingController> {
   Widget _buildSection({
     required String title,
     required Widget child,
+    Widget? trailing,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (trailing != null) trailing,
+          ],
         ),
         const SizedBox(height: 16),
         child,
@@ -35,23 +44,115 @@ class SettingView extends GetView<SettingController> {
         title: Text('settings'.tr, style: TextStyle(fontSize: 20)),
         centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildLanguageSelector(),
-            _divider(),
-            _buildThemeSelector(),
-            _divider(),
-            _buildAccountInfo(),
-            _divider(),
-            _buildAboutVersion(),
-            _divider(),
-            _buildLogoutButton(),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildLanguageSelector(),
+              _divider(),
+              _buildThemeSelector(),
+              _divider(),
+              _buildSyncSettings(),
+              _divider(),
+              _buildAccountInfo(),
+              _divider(),
+              _buildAboutVersion(),
+              _divider(),
+              _buildLogoutButton(),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// 同步设置
+  Widget _buildSyncSettings() {
+    return _buildSection(
+      title: 'syncSettings'.tr,
+      trailing: Obx(() {
+        return IconButton(
+          tooltip: 'syncNow'.tr,
+          onPressed:
+              controller.syncRunning.value ? null : () => controller.syncNow(),
+          icon: controller.syncRunning.value
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.sync),
+        );
+      }),
+      child: Obx(() {
+        final selectedIndex = controller.selectedSyncTimeframeIndex.value;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(
+                  SettingController.syncTimeframeMinutes.length, (index) {
+                final isSelected = selectedIndex == index;
+                final minutes = SettingController.syncTimeframeMinutes[index];
+                final labelKey =
+                    controller.getSyncTimeframeLabelKeyByMinutes(minutes);
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: GestureDetector(
+                      onTap: () => controller.updateSyncTimeframeIndex(index),
+                      child: Container(
+                        height: 35,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: isSelected
+                              ? Border.all(color: Colors.blue, width: 1.5)
+                              : Border.all(color: Colors.transparent),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          labelKey.tr,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isSelected ? Colors.black87 : Colors.black45,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${'lastSync'.tr}：${controller.lastSyncText.value}',
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${'nextSync'.tr}：${controller.nextSyncText.value}',
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      }),
     );
   }
 
