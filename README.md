@@ -1,6 +1,6 @@
-# Readeck
+# Readaper
 
-Readeck 是一个现代化的稍后读应用程序，基于 Flutter 构建，采用 GetX 状态管理框架，提供流畅的阅读体验和丰富的功能特性。
+Readaper 是一个现代化的稍后读应用程序，基于 Flutter 构建，采用 GetX 状态管理框架，提供流畅的阅读体验和丰富的功能特性。
 
 [![pEzewb4.jpg](https://s21.ax1x.com/2025/05/22/pEzewb4.jpg)](https://imgse.com/i/pEzewb4)
 [![pEzeBVJ.jpg](https://s21.ax1x.com/2025/05/22/pEzeBVJ.jpg)](https://imgse.com/i/pEzeBVJ)
@@ -40,7 +40,7 @@ Readeck 是一个现代化的稍后读应用程序，基于 Flutter 构建，采
 
 ## 开始使用
 
-- #### Readeck安装
+- #### Readaper 安装
 
 - #### 本地运行
 
@@ -51,12 +51,12 @@ Readeck 是一个现代化的稍后读应用程序，基于 Flutter 构建，采
 
 - #### 安装包下载
 
-  1. Android版本：https://github.com/WannaYoung/readeck-app/releases
+  1. Android版本：https://github.com/WannaYoung/readaper/releases
   2. iOS版本：等待后续开发上架
 
 
 
-## Readeck后端部署
+## Readaper 后端部署
 
 - 下载地址
 https://readeck.org/en/download

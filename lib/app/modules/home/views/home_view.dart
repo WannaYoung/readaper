@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:pie_menu/pie_menu.dart';
-import 'package:readeck/app/routes/app_pages.dart';
-import 'package:readeck/app/widgets/alert_dialog.dart';
+import 'package:readaper/app/routes/app_pages.dart';
+import 'package:readaper/app/widgets/alert_dialog.dart';
 import '../controllers/home_controller.dart';
 import '../../../widgets/article_card.dart';
 
@@ -57,7 +57,7 @@ class HomeView extends GetView<HomeController> {
                 !controller.isSidebarOpen.value,
           )),
       title: Text(
-        'Readeck'.tr,
+        'Readaper'.tr,
         style: theme.textTheme.titleLarge?.copyWith(
           color: theme.textTheme.titleLarge?.color ?? theme.primaryColor,
           fontWeight: FontWeight.bold,

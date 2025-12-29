@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:get/get.dart';
-import 'package:readeck/app/widgets/image_preview.dart';
+import 'package:readaper/app/widgets/image_preview.dart';
 import '../data/models/reading_settings.dart';
 
 /// 根据阅读设置构建Markdown配置

@@ -10,7 +10,7 @@ class LoginView extends GetView<LoginController> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: Text('Readeck'.tr,
+        title: Text('Readaper'.tr,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
         centerTitle: true,
       ),

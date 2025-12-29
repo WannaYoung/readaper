@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:markdown_widget/markdown_widget.dart';
-import 'package:readeck/app/data/models/bookmark.dart';
-import 'package:readeck/app/data/models/reading_settings.dart';
-import 'package:readeck/app/modules/home/controllers/home_controller.dart';
+import 'package:readaper/app/data/models/bookmark.dart';
+import 'package:readaper/app/data/models/reading_settings.dart';
+import 'package:readaper/app/modules/home/controllers/home_controller.dart';
 import '../../../data/providers/bookmark_provider.dart';
 
 class ReadingController extends GetxController {

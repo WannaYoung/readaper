@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:readeck/app/routes/app_pages.dart';
-import 'package:readeck/app/widgets/alert_dialog.dart';
+import 'package:readaper/app/routes/app_pages.dart';
+import 'package:readaper/app/widgets/alert_dialog.dart';
 import '../../../data/providers/setting_provider.dart';
 import '../../../data/models/user_profile.dart';
 import '../../../data/localization_service.dart';

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
-import 'package:readeck/app/data/markdown_builder.dart';
-import 'package:readeck/app/modules/reading/views/reading_dialog.dart';
+import 'package:readaper/app/data/markdown_builder.dart';
+import 'package:readaper/app/modules/reading/views/reading_dialog.dart';
 import '../controllers/reading_controller.dart';
 
 class ReadingView extends GetView<ReadingController> {

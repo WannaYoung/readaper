@@ -36,7 +36,7 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'readeck-flutter',
+        'User-Agent': 'readaper-flutter',
       },
     ));
     dio.interceptors.add(InterceptorsWrapper(

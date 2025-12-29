@@ -1,5 +1,5 @@
-name: readeck
-description: "A new Flutter project."
+name: readaper
+description: "A reading app for managing and organizing your books and reading lists."
 publish_to: 'none'
 
 version: 1.0.0+1

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:readeck/app/config/env.dart';
+import 'package:readaper/app/config/env.dart';
 import '../../../data/providers/auth_provider.dart';
 import 'package:get_storage/get_storage.dart';
 

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:readeck/app/data/translations.dart';
+import 'package:readaper/app/data/translations.dart';
 import 'app/routes/app_pages.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,7 +21,7 @@ void main() async {
   final themeService = ThemeService();
 
   runApp(GetMaterialApp(
-    title: "Readeck",
+    title: "Readaper",
     getPages: AppPages.routes,
     builder: combineBuilder,
     debugShowCheckedModeBanner: false,

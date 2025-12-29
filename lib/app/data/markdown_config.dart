@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:readeck/app/widgets/image_preview.dart';
+import 'package:readaper/app/widgets/image_preview.dart';
 
 final defaultMarkdownConfig = MarkdownConfig(
   configs: [
