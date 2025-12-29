@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/login_controller.dart';
 
+/// 登录页
+///
+/// - 输入服务器地址/用户名/密码
+/// - 点击按钮触发登录
 class LoginView extends GetView<LoginController> {
   const LoginView({super.key});
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: Text('Readaper'.tr,
+        title: Text('readaper'.tr,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
         centerTitle: true,
       ),
@@ -24,19 +29,19 @@ class LoginView extends GetView<LoginController> {
               const SizedBox(height: 32),
               _buildTextField(
                 controller: controller.serverController,
-                label: '服务器地址'.tr,
+                label: 'serverAddress'.tr,
                 theme: theme,
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: controller.usernameController,
-                label: '用户名'.tr,
+                label: 'username'.tr,
                 theme: theme,
               ),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: controller.passwordController,
-                label: '密码'.tr,
+                label: 'password'.tr,
                 theme: theme,
                 obscure: true,
               ),
@@ -49,6 +54,7 @@ class LoginView extends GetView<LoginController> {
     );
   }
 
+  /// 构建输入框
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -91,6 +97,7 @@ class LoginView extends GetView<LoginController> {
     );
   }
 
+  /// 构建登录按钮
   Widget _buildLoginButton(ThemeData theme) {
     return SizedBox(
       height: 48,
@@ -103,7 +110,7 @@ class LoginView extends GetView<LoginController> {
           elevation: 0,
         ),
         onPressed: controller.login,
-        child: Text('登录'.tr,
+        child: Text('login'.tr,
             style: const TextStyle(fontSize: 18, color: Colors.white)),
       ),
     );

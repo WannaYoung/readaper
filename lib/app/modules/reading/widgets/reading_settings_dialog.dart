@@ -2,10 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/reading_controller.dart';
 
+/// 阅读设置弹窗
+///
+/// - 支持调整标题/正文/页边距/行距
+/// - 支持重置与保存
 class ReadingSettingsDialog extends StatelessWidget {
   final ReadingController controller;
 
   const ReadingSettingsDialog({super.key, required this.controller});
+
+  List<_ReadingSettingItem> _buildItems() {
+    return [
+      _ReadingSettingItem(
+        title: 'titleText'.tr,
+        min: 18,
+        max: 30,
+        step: 1.0,
+        getValue: () => controller.tempSettings.value.headingFontSize,
+        setValue: (value) {
+          controller.tempSettings.update((val) {
+            val?.headingFontSize = value;
+          });
+        },
+      ),
+      _ReadingSettingItem(
+        title: 'bodyText'.tr,
+        min: 12,
+        max: 24,
+        step: 1.0,
+        getValue: () => controller.tempSettings.value.bodyFontSize,
+        setValue: (value) {
+          controller.tempSettings.update((val) {
+            val?.bodyFontSize = value;
+          });
+        },
+      ),
+      _ReadingSettingItem(
+        title: 'pageMargin'.tr,
+        min: 10,
+        max: 40,
+        step: 2.0,
+        getValue: () => controller.tempSettings.value.pagePadding,
+        setValue: (value) {
+          controller.tempSettings.update((val) {
+            val?.pagePadding = value;
+          });
+        },
+      ),
+      _ReadingSettingItem(
+        title: 'lineSpacing'.tr,
+        min: 1.2,
+        max: 2.4,
+        step: 0.1,
+        getValue: () => controller.tempSettings.value.lineHeight,
+        setValue: (value) {
+          controller.tempSettings.update((val) {
+            val?.lineHeight = value;
+          });
+        },
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,65 +86,25 @@ class ReadingSettingsDialog extends StatelessWidget {
               ),
               // 标题
               Text(
-                '阅读设置'.tr,
+                'readingSettings'.tr,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 24),
-              _buildSettingItem(
-                title: '标题文本'.tr,
-                value: controller.tempSettings.value.headingFontSize,
-                min: 18,
-                max: 30,
-                step: 1.0,
-                onChanged: (value) {
-                  controller.tempSettings.update((val) {
-                    val?.headingFontSize = value;
-                  });
-                  controller.applyTempSettings();
-                },
-              ),
-              _buildSettingItem(
-                title: '正文文本'.tr,
-                value: controller.tempSettings.value.bodyFontSize,
-                min: 12,
-                max: 24,
-                step: 1.0,
-                onChanged: (value) {
-                  controller.tempSettings.update((val) {
-                    val?.bodyFontSize = value;
-                  });
-                  controller.applyTempSettings();
-                },
-              ),
-              _buildSettingItem(
-                title: '页边距'.tr,
-                value: controller.tempSettings.value.pagePadding,
-                min: 10,
-                max: 40,
-                step: 2.0,
-                onChanged: (value) {
-                  controller.tempSettings.update((val) {
-                    val?.pagePadding = value;
-                  });
-                  controller.applyTempSettings();
-                },
-              ),
-              _buildSettingItem(
-                title: '行距'.tr,
-                value: controller.tempSettings.value.lineHeight,
-                min: 1.2,
-                max: 2.4,
-                step: 0.1,
-                onChanged: (value) {
-                  controller.tempSettings.update((val) {
-                    val?.lineHeight = value;
-                  });
-                  controller.applyTempSettings();
-                },
-              ),
+              for (final item in _buildItems())
+                _buildSettingItem(
+                  title: item.title,
+                  value: item.getValue(),
+                  min: item.min,
+                  max: item.max,
+                  step: item.step,
+                  onChanged: (value) {
+                    item.setValue(value);
+                    controller.applyTempSettings();
+                  },
+                ),
               const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -97,14 +114,14 @@ class ReadingSettingsDialog extends StatelessWidget {
                       controller.resetSettings();
                       controller.applyTempSettings();
                     },
-                    child: Text('重置'.tr),
+                    child: Text('reset'.tr),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       controller.saveSettings();
                       Get.back();
                     },
-                    child: Text('保存'.tr),
+                    child: Text('save'.tr),
                   ),
                 ],
               ),
@@ -113,6 +130,7 @@ class ReadingSettingsDialog extends StatelessWidget {
     );
   }
 
+  /// 构建单个设置项（标题 + Slider）
   Widget _buildSettingItem({
     required String title,
     required double value,
@@ -168,6 +186,24 @@ class ReadingSettingsDialog extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ReadingSettingItem {
+  final String title;
+  final double min;
+  final double max;
+  final double step;
+  final double Function() getValue;
+  final void Function(double value) setValue;
+
+  _ReadingSettingItem({
+    required this.title,
+    required this.min,
+    required this.max,
+    required this.step,
+    required this.getValue,
+    required this.setValue,
+  });
 }
 
 class CustomTrackShape extends RoundedRectSliderTrackShape {

@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:readaper/app/routes/app_pages.dart';
-import 'package:readaper/app/widgets/alert_dialog.dart';
-import '../../../data/providers/setting_provider.dart';
-import '../../../data/models/user_profile.dart';
-import '../../../data/localization_service.dart';
-import '../../../data/theme_service.dart';
+import 'package:readaper/app/shared/widgets/alert_dialog.dart';
+import '../providers/setting_provider.dart';
+import '../models/user_profile.dart';
+import '../../../services/localization_service.dart';
+import '../../../services/theme_service.dart';
+import '../../../network/api_client.dart';
 
+/// 设置页控制器
+///
+/// - 负责主题/语言选择
+/// - 负责拉取用户信息
+/// - 负责退出登录
 class SettingController extends GetxController {
   // 主题和语言选项
   static const themeColors = [
@@ -17,9 +23,9 @@ class SettingController extends GetxController {
   ];
   static const languageOptions = ['简体中文', '繁体中文', 'English'];
 
-  int selectedThemeIndex = 0;
-  int selectedLanguageIndex = 0;
-  UserProfile? userProfile;
+  final selectedThemeIndex = 0.obs;
+  final selectedLanguageIndex = 0.obs;
+  final userProfile = Rxn<UserProfile>();
   final SettingProvider provider = SettingProvider();
   final LocalizationService localizationService = LocalizationService();
   final ThemeService themeService = ThemeService();
@@ -27,52 +33,55 @@ class SettingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    selectedThemeIndex = themeService.themeIndex;
+    selectedThemeIndex.value = themeService.themeIndex;
     // 初始化语言选中项
     _initSelectedLanguageIndex();
+    // 拉取用户信息
     fetchUserProfile();
   }
 
   void _initSelectedLanguageIndex() {
     Locale locale = Get.locale ?? localizationService.getCurrentLocale();
     if (locale.languageCode == 'zh' && locale.countryCode == 'CN') {
-      selectedLanguageIndex = 0; // 简体中文
+      selectedLanguageIndex.value = 0; // 简体中文
     } else if (locale.languageCode == 'zh' && locale.countryCode == 'TW') {
-      selectedLanguageIndex = 1; // 繁体中文
+      selectedLanguageIndex.value = 1; // 繁体中文
     } else {
-      selectedLanguageIndex = 2; // English
+      selectedLanguageIndex.value = 2; // English
     }
-    update();
   }
 
   void updateThemeIndex(int index) {
-    selectedThemeIndex = index;
-    update();
+    selectedThemeIndex.value = index;
+    // 持久化主题设置
     themeService.saveTheme(index);
   }
 
+  /// 更新语言
   void updateLanguageIndex(int index) {
-    selectedLanguageIndex = index;
-    update();
+    selectedLanguageIndex.value = index;
     localizationService.changeLocale(SettingController.languageOptions[index]);
   }
 
+  /// 拉取用户信息
   Future<void> fetchUserProfile() async {
     try {
-      userProfile = await provider.getUserProfile();
-      update();
+      userProfile.value = await provider.getUserProfile();
+    } on ApiException catch (e) {
+      Get.snackbar('failed'.tr, e.message);
     } catch (e) {
-      // 可加错误提示
+      Get.snackbar('failed'.tr, e.toString());
     }
   }
 
+  /// 退出登录
   Future<void> logout() async {
     showDialog(
       context: Get.context!,
       builder: (context) => CustomAlertDialog(
-        title: '确认退出'.tr,
-        description: '退出后需要重新登录'.tr,
-        confirmButtonText: '退出'.tr,
+        title: 'confirmLogout'.tr,
+        description: 'logoutNeedRelogin'.tr,
+        confirmButtonText: 'exit'.tr,
         confirmButtonColor: const Color.fromARGB(255, 239, 72, 60),
         onConfirm: () {
           final box = GetStorage();

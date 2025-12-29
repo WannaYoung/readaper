@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:readaper/app/data/translations.dart';
+import 'package:readaper/app/services/translations.dart';
 import 'app/routes/app_pages.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'app/data/localization_service.dart';
-import 'app/data/theme_service.dart';
+import 'app/services/localization_service.dart';
+import 'app/services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +54,10 @@ void main() async {
   });
 }
 
+/// 组合全局 Builder
+///
+/// - 接入 EasyLoading
+/// - 统一处理点击空白处收起键盘
 Widget combineBuilder(BuildContext context, Widget? child) {
   Widget easyLoadingWrappedChild =
       EasyLoading.init(builder: (innerContext, innerWidget) {
@@ -75,14 +79,16 @@ Widget combineBuilder(BuildContext context, Widget? child) {
   return easyLoadingWrappedChild;
 }
 
-configUiOverlayStyle() {
+/// 配置状态栏/系统 UI 样式
+void configUiOverlayStyle() {
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarIconBrightness: Brightness.dark,
     statusBarBrightness: Brightness.light,
   ));
 }
 
-configEasyLoading() {
+/// 配置全局 Loading 样式
+void configEasyLoading() {
   EasyLoading.instance
     ..displayDuration = const Duration(milliseconds: 2000)
     ..indicatorWidget = LoadingAnimationWidget.fourRotatingDots(

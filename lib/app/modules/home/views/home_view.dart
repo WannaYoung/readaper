@@ -3,10 +3,15 @@ import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:readaper/app/routes/app_pages.dart';
-import 'package:readaper/app/widgets/alert_dialog.dart';
+import 'package:readaper/app/shared/widgets/alert_dialog.dart';
 import '../controllers/home_controller.dart';
-import '../../../widgets/article_card.dart';
+import '../widgets/article_card.dart';
 
+/// 首页
+///
+/// - 展示书签列表
+/// - 支持下拉刷新与触底加载更多
+/// - 支持侧边栏筛选
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -15,17 +20,6 @@ class HomeView extends GetView<HomeController> {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final sidebarWidth = screenWidth * 0.6;
-    final scrollController = ScrollController();
-
-    // 上拉加载更多监听
-    scrollController.addListener(() {
-      if (scrollController.position.pixels >=
-          scrollController.position.maxScrollExtent - 100) {
-        if (!controller.isLoadingMore.value && !controller.loading.value) {
-          controller.loadMore();
-        }
-      }
-    });
 
     return PieCanvas(
       theme: PieTheme(
@@ -36,7 +30,7 @@ class HomeView extends GetView<HomeController> {
         appBar: _buildAppBar(theme),
         body: Stack(
           children: [
-            _buildArticleList(scrollController),
+            _buildArticleList(),
             _buildSidebarMask(),
             _buildSidebar(sidebarWidth, context),
           ],
@@ -45,7 +39,7 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  /// AppBar
+  /// 顶部栏
   PreferredSizeWidget _buildAppBar(ThemeData theme) {
     return AppBar(
       leading: Obx(() => IconButton(
@@ -57,7 +51,7 @@ class HomeView extends GetView<HomeController> {
                 !controller.isSidebarOpen.value,
           )),
       title: Text(
-        'Readaper'.tr,
+        'readaper'.tr,
         style: theme.textTheme.titleLarge?.copyWith(
           color: theme.textTheme.titleLarge?.color ?? theme.primaryColor,
           fontWeight: FontWeight.bold,
@@ -76,7 +70,7 @@ class HomeView extends GetView<HomeController> {
   }
 
   /// 文章列表
-  Widget _buildArticleList(ScrollController scrollController) {
+  Widget _buildArticleList() {
     return Obx(() {
       if (controller.loading.value && controller.articles.isEmpty) {
         return const Center(child: CircularProgressIndicator());
@@ -84,7 +78,7 @@ class HomeView extends GetView<HomeController> {
       return RefreshIndicator(
         onRefresh: () => controller.fetchArticles(refresh: true),
         child: ListView.separated(
-          controller: scrollController,
+          controller: controller.scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(top: 8, bottom: 20),
           itemCount: controller.articles.length + 1,
@@ -125,7 +119,7 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
-  /// PieMenu操作
+  /// PieMenu 操作
   void _onPieAction(int actionIndex, bookmark, BuildContext context) {
     switch (actionIndex) {
       case 0:
@@ -138,18 +132,22 @@ class HomeView extends GetView<HomeController> {
         // 分享
         break;
       case 3:
-        showDialog(
-          context: context,
-          builder: (context) => CustomAlertDialog(
-            title: '确认删除'.tr,
-            description: '删除后文章无法恢复'.tr,
-            confirmButtonText: '删除'.tr,
-            confirmButtonColor: const Color.fromARGB(255, 239, 72, 60),
-            onConfirm: () => controller.deleteBookmark(bookmark),
-          ),
-        );
+        _showDeleteConfirmDialog(context, bookmark);
         break;
     }
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context, bookmark) {
+    showDialog(
+      context: context,
+      builder: (context) => CustomAlertDialog(
+        title: 'confirmDelete'.tr,
+        description: 'deleteIrreversible'.tr,
+        confirmButtonText: 'delete'.tr,
+        confirmButtonColor: const Color.fromARGB(255, 239, 72, 60),
+        onConfirm: () => controller.deleteBookmark(bookmark),
+      ),
+    );
   }
 
   /// 侧边栏遮罩

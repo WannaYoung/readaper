@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../controllers/reading_controller.dart';
-import '../../../data/providers/bookmark_provider.dart';
+import '../../home/providers/bookmark_provider.dart';
 
 class ReadingBinding extends Bindings {
   @override

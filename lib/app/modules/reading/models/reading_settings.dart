@@ -2,6 +2,10 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+/// 阅读设置
+///
+/// - 支持本地持久化（GetStorage）
+/// - 加载失败时会回退到默认设置
 class ReadingSettings {
   // 标题文本大小
   double headingFontSize;
@@ -18,7 +22,7 @@ class ReadingSettings {
   static const double defaultPagePadding = 20.0;
   static const double defaultLineHeight = 1.8;
 
-  // 构造函数
+  /// 构造函数
   ReadingSettings({
     this.headingFontSize = defaultHeadingFontSize,
     this.bodyFontSize = defaultBodyFontSize,
@@ -26,14 +30,14 @@ class ReadingSettings {
     this.lineHeight = defaultLineHeight,
   });
 
-  // 从JSON构造
+  /// 从 JSON 构造
   ReadingSettings.fromJson(Map<String, dynamic> json)
       : headingFontSize = json['headingFontSize'] ?? defaultHeadingFontSize,
         bodyFontSize = json['bodyFontSize'] ?? defaultBodyFontSize,
         pagePadding = json['pagePadding'] ?? defaultPagePadding,
         lineHeight = json['lineHeight'] ?? defaultLineHeight;
 
-  // 转换为JSON
+  /// 转换为 JSON
   Map<String, dynamic> toJson() => {
         'headingFontSize': headingFontSize,
         'bodyFontSize': bodyFontSize,
@@ -41,13 +45,13 @@ class ReadingSettings {
         'lineHeight': lineHeight,
       };
 
-  // 保存设置到本地存储
+  /// 保存设置到本地存储
   Future<void> save() async {
     final box = GetStorage();
     await box.write('reading_settings', jsonEncode(toJson()));
   }
 
-  // 从本地存储加载设置
+  /// 从本地存储加载设置
   static Future<ReadingSettings> load() async {
     try {
       final box = GetStorage();
@@ -56,12 +60,13 @@ class ReadingSettings {
         return ReadingSettings.fromJson(jsonDecode(data));
       }
     } catch (e) {
-      Get.snackbar('错误', '加载阅读设置失败');
+      // 加载失败时提示，并回退到默认设置
+      Get.snackbar('error'.tr, 'loadReadingSettingsFailed'.tr);
     }
     return ReadingSettings(); // 返回默认设置
   }
 
-  // 创建副本
+  /// 创建副本
   ReadingSettings copy() {
     return ReadingSettings(
       headingFontSize: headingFontSize,

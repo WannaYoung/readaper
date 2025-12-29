@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:readaper/app/config/env.dart';
-import '../../../data/providers/auth_provider.dart';
+import 'package:readaper/app/routes/app_pages.dart';
+import '../providers/auth_provider.dart';
+import '../../../network/api_client.dart';
 import 'package:get_storage/get_storage.dart';
 
 class LoginController extends GetxController {
@@ -14,26 +15,16 @@ class LoginController extends GetxController {
   final passwordController = TextEditingController(text: env.password);
   final box = GetStorage();
 
-  String _normalizeBaseUrl(String url) {
-    var value = url.trim();
-    while (value.endsWith('/')) {
-      value = value.substring(0, value.length - 1);
-    }
-    if (value.endsWith('/api')) {
-      value = value.substring(0, value.length - 4);
-    }
-    while (value.endsWith('/')) {
-      value = value.substring(0, value.length - 1);
-    }
-    return value;
-  }
-
+  /// 执行登录
+  ///
+  /// - 会将服务器地址写入本地存储
+  /// - 登录成功后写入 token，并跳转到首页
   void login() async {
-    final server = _normalizeBaseUrl(serverController.text);
+    final server = ApiClient.normalizeBaseUrl(serverController.text);
     final username = usernameController.text.trim();
     final password = passwordController.text;
     if (server.isEmpty || username.isEmpty || password.isEmpty) {
-      Get.snackbar('错误'.tr, '请填写完整信息'.tr);
+      Get.snackbar('error'.tr, 'fillAllFields'.tr);
       return;
     }
     box.write('server', server);
@@ -45,35 +36,26 @@ class LoginController extends GetxController {
       if (res != null && res['token'] != null && res['id'] != null) {
         box.write('token', res['token']);
         box.write('id', res['id']);
-        Get.offAllNamed('/home');
+        Get.offAllNamed(Routes.HOME);
       } else {
         final message = res is Map<String, dynamic>
-            ? (res['message'] ?? res['error'] ?? res['detail'] ?? '无效响应'.tr)
-            : '无效响应'.tr;
-        Get.snackbar('登录失败'.tr, message.toString());
+            ? (res['message'] ??
+                res['error'] ??
+                res['detail'] ??
+                'invalidResponse'.tr)
+            : 'invalidResponse'.tr;
+        Get.snackbar('loginFailed'.tr, message.toString());
       }
-    } on DioException catch (e) {
-      final statusCode = e.response?.statusCode;
-      final data = e.response?.data;
-      String message = e.message ?? '请求失败'.tr;
-      if (data is Map<String, dynamic>) {
-        message =
-            (data['message'] ?? data['error'] ?? data['detail'] ?? message)
-                .toString();
-      } else if (data != null) {
-        message = data.toString();
-      }
-      if (statusCode != null) {
-        message = 'HTTP $statusCode: $message';
-      }
-      Get.snackbar('登录失败'.tr, message);
+    } on ApiException catch (e) {
+      Get.snackbar('loginFailed'.tr, e.message);
     } catch (e) {
-      Get.snackbar('登录失败'.tr, e.toString());
+      Get.snackbar('loginFailed'.tr, e.toString());
     }
   }
 
   @override
   void onClose() {
+    // 释放输入框控制器，避免内存泄漏
     serverController.dispose();
     usernameController.dispose();
     passwordController.dispose();

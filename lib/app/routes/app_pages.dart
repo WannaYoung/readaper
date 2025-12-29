@@ -16,22 +16,22 @@ class AppPages {
 
   static final routes = [
     GetPage(
-      name: _Paths.HOME,
+      name: Routes.HOME,
       page: () => const HomeView(),
       binding: HomeBinding(),
     ),
     GetPage(
-      name: _Paths.LOGIN,
+      name: Routes.LOGIN,
       page: () => const LoginView(),
       binding: LoginBinding(),
     ),
     GetPage(
-      name: '/reading',
+      name: Routes.READING,
       page: () => const ReadingView(),
       binding: ReadingBinding(),
     ),
     GetPage(
-      name: '/setting',
+      name: Routes.SETTING,
       page: () => const SettingView(),
       binding: SettingBinding(),
     ),

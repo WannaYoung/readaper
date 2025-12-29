@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:extended_image/extended_image.dart';
 
+/// 图片预览弹窗
+///
+/// - 支持单击关闭
+/// - 支持双击缩放、手势缩放与拖拽
 class ImagePreviewDialog extends StatelessWidget {
   final String url;
+
   const ImagePreviewDialog({super.key, required this.url});
 
   @override

@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
-import 'package:readaper/app/data/markdown_builder.dart';
-import 'package:readaper/app/modules/reading/views/reading_dialog.dart';
+import 'package:readaper/app/services/markdown_service.dart';
+import 'package:readaper/app/modules/reading/widgets/reading_settings_dialog.dart';
 import '../controllers/reading_controller.dart';
 
+/// 阅读页
+///
+/// - 展示文章 Markdown 内容
+/// - 支持下拉刷新
+/// - 支持收藏/归档/打开阅读设置
 class ReadingView extends GetView<ReadingController> {
   const ReadingView({super.key});
 
@@ -17,6 +22,7 @@ class ReadingView extends GetView<ReadingController> {
     );
   }
 
+  /// 构建顶部栏（根据滚动状态显示/隐藏）
   PreferredSizeWidget _buildAppBar() {
     return PreferredSize(
       preferredSize:
@@ -81,6 +87,7 @@ class ReadingView extends GetView<ReadingController> {
     );
   }
 
+  /// 构建主体内容（加载态/内容态）
   Widget _buildBody() {
     return Obx(() {
       if (controller.loading.value && !controller.isReady.value) {
@@ -116,10 +123,14 @@ class ReadingView extends GetView<ReadingController> {
     });
   }
 
+  /// 构建 Markdown 渲染区域
+  ///
+  /// - 根据设置配置 Markdown 渲染样式
+  /// - 渲染 Markdown 内容
   Widget _buildMarkdown() {
     return Obx(() {
       final config =
-          MarkdownBuilder.getMarkdownConfig(controller.settings.value);
+          MarkdownService.configForSettings(controller.settings.value);
       final padding = EdgeInsets.fromLTRB(
         controller.settings.value.pagePadding,
         0,

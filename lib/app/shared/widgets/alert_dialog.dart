@@ -58,7 +58,7 @@ class CustomAlertDialog extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        '取消'.tr,
+                        'cancel'.tr,
                       ),
                     ),
                   ),
