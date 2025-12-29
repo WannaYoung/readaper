@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
-import 'package:readeck/app/data/markdown_config.dart';
+import 'package:readeck/app/data/markdown_builder.dart';
+import 'package:readeck/app/modules/reading/views/reading_dialog.dart';
 import '../controllers/reading_controller.dart';
 
 class ReadingView extends GetView<ReadingController> {
@@ -49,6 +50,29 @@ class ReadingView extends GetView<ReadingController> {
                                 : null,
                             onPressed: controller.clickArchive,
                           )),
+                      IconButton(
+                          onPressed: () {
+                            Get.bottomSheet(
+                              Container(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(Get.context!)
+                                      .scaffoldBackgroundColor,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(15),
+                                    topRight: Radius.circular(15),
+                                  ),
+                                ),
+                                child: ReadingSettingsDialog(
+                                    controller: controller),
+                              ),
+                              backgroundColor: Colors.transparent,
+                              clipBehavior: Clip.antiAlias,
+                              isScrollControlled: true,
+                            );
+                          },
+                          icon: const Icon(Icons.text_format_outlined)),
                       const SizedBox(width: 10),
                     ],
                   )
@@ -93,11 +117,22 @@ class ReadingView extends GetView<ReadingController> {
   }
 
   Widget _buildMarkdown() {
-    return MarkdownWidget(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
-      data: controller.markdown.value,
-      config: defaultMarkdownConfig,
-    );
+    return Obx(() {
+      final config =
+          MarkdownBuilder.getMarkdownConfig(controller.settings.value);
+      final padding = EdgeInsets.fromLTRB(
+        controller.settings.value.pagePadding,
+        0,
+        controller.settings.value.pagePadding,
+        15,
+      );
+
+      return MarkdownWidget(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: padding,
+        data: controller.markdown.value,
+        config: config,
+      );
+    });
   }
 }

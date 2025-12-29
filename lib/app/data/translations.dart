@@ -44,10 +44,13 @@ class AppTranslations extends Translations {
           '已保存到书签': '已保存到书签',
           '保存失败': '保存失败',
           // 阅读
-          '边距': '边距',
+          '阅读设置': '阅读设置',
+          '标题文本': '标题文本',
+          '正文文本': '正文文本',
+          '页边距': '页边距',
           '行距': '行距',
           '字体': '字体',
-          '字体大小': '字体大小',
+          '重置': '重置',
           // 设置
           '设置': '设置',
           '语言': '语言',
@@ -103,10 +106,13 @@ class AppTranslations extends Translations {
           '已保存到书签': '已儲存到書籤',
           '保存失败': '儲存失敗',
           // 阅读
-          '边距': '邊距',
+          '阅读设置': '閱讀設置',
+          '标题文本': '標題文本',
+          '正文文本': '正文文本',
+          '页边距': '頁邊距',
           '行距': '行距',
           '字体': '字體',
-          '字体大小': '字體大小',
+          '重置': '重置',
           // 设置
           '设置': '設置',
           '语言': '語言',
@@ -162,10 +168,13 @@ class AppTranslations extends Translations {
           '已保存到书签': 'Saved to Bookmark',
           '保存失败': 'Save Failed',
           // 阅读
-          '边距': 'Margin',
+          '阅读设置': 'Reading Settings',
+          '标题文本': 'Title Text',
+          '正文文本': 'Body Text',
+          '页边距': 'Page Margin',
           '行距': 'Line Spacing',
           '字体': 'Font',
-          '字体大小': 'Font Size',
+          '重置': 'Reset',
           // 设置
           '设置': 'Settings',
           '语言': 'Language',

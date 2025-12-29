@@ -144,21 +144,21 @@ class HomeController extends GetxController {
     filterIsArchived = null;
     filterIsMarked = null;
     filterType = null;
-    switch (title) {
-      case '未读':
+    switch (index) {
+      case 0: // 全部
+        // 不需要筛选
+        break;
+      case 1: // 未读
         filterIsRead = ['unread'];
         break;
-      case '归档':
+      case 2: // 归档
         filterIsArchived = true;
         break;
-      case '收藏':
+      case 3: // 收藏
         filterIsMarked = true;
         break;
-      case '视频':
+      case 4: // 视频
         filterType = ['video'];
-        break;
-      default:
-        // "全部"、"高亮"、"标签"等不筛选
         break;
     }
     fetchArticles(refresh: true);

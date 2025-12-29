@@ -44,7 +44,6 @@ final defaultMarkdownConfig = MarkdownConfig(
     ),
     ImgConfig(
       builder: (url, attributes) {
-        if (url == null) return const SizedBox.shrink();
         return GestureDetector(
           onTap: () {
             showDialog(

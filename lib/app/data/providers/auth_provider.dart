@@ -5,7 +5,7 @@ class AuthProvider {
   final _client = ApiClient().dio;
 
   Future<Map<String, dynamic>?> login({
-    required String application,
+    String application = 'readear',
     required String username,
     required String password,
     List<String>? roles,
@@ -23,6 +23,7 @@ class AuthProvider {
           'accept': 'application/json',
           'content-type': 'application/json',
         },
+        validateStatus: (_) => true,
       ),
     );
     return res.data;
