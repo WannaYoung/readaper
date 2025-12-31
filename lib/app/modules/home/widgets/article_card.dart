@@ -24,21 +24,25 @@ class ArticleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color ?? theme.hintColor;
+    final secondaryTextColor =
+        (theme.textTheme.bodySmall?.color ?? theme.hintColor).withAlpha(170);
     final pieButtonTheme = PieButtonTheme(
-      iconColor: const Color(0xFF333333),
-      backgroundColor: const Color(0xFFEBEBEB),
+      iconColor: textColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
     );
     final pieButtonThemeHovered = PieButtonTheme(
-      iconColor: Colors.white,
-      backgroundColor: const Color(0xFF555555),
+      iconColor: theme.colorScheme.onPrimary,
+      backgroundColor: theme.primaryColor,
     );
     final favoriteButtonTheme = PieButtonTheme(
-      iconColor: const Color.fromARGB(255, 255, 255, 255),
-      backgroundColor: const Color.fromARGB(255, 247, 49, 49),
+      iconColor: theme.colorScheme.onPrimary,
+      backgroundColor: theme.primaryColor,
     );
     final archiveButtonTheme = PieButtonTheme(
-      iconColor: const Color.fromARGB(255, 255, 255, 255),
-      backgroundColor: const Color.fromARGB(255, 241, 197, 66),
+      iconColor: theme.colorScheme.onPrimary,
+      backgroundColor: theme.primaryColor,
     );
 
     return Padding(
@@ -80,7 +84,7 @@ class ArticleCard extends StatelessWidget {
             buttonTheme: pieButtonTheme,
             buttonThemeHovered: PieButtonTheme(
               iconColor: Colors.white,
-              backgroundColor: const Color.fromARGB(255, 247, 49, 49),
+              backgroundColor: const Color.fromARGB(255, 239, 72, 60),
             ),
             child: const Icon(Icons.delete),
           ),
@@ -141,16 +145,20 @@ class ArticleCard extends StatelessWidget {
                             bookmark.site!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: secondaryTextColor,
+                            ),
                           ),
                         ),
                       const SizedBox(width: 10),
                       if ((bookmark.created ?? '').isNotEmpty)
                         Text(
                           bookmark.created!,
-                          style:
-                              const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: secondaryTextColor,
+                          ),
                         ),
                     ],
                   ),

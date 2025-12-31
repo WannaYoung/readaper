@@ -132,7 +132,6 @@ class BookmarkSyncService {
     0, // 手动
     60,
     360,
-    720,
-    1440,
+    720
   ];
 }

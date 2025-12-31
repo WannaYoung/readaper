@@ -76,6 +76,7 @@ class HomeListController extends GetxController {
   Future<void> fetch({
     required bool refresh,
     required Map<String, dynamic> baseParams,
+    bool showLoading = true,
   }) async {
     if (loading.value || isLoadingMore.value) return;
 
@@ -93,7 +94,9 @@ class HomeListController extends GetxController {
     }
 
     try {
-      EasyLoading.show();
+      if (showLoading) {
+        EasyLoading.show();
+      }
 
       final params = <String, dynamic>{
         'limit': _pageLimit,
@@ -120,7 +123,9 @@ class HomeListController extends GetxController {
     } catch (e) {
       _showError(e);
     } finally {
-      EasyLoading.dismiss();
+      if (showLoading) {
+        EasyLoading.dismiss();
+      }
       loading.value = false;
       isLoadingMore.value = false;
     }

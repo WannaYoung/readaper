@@ -68,12 +68,22 @@ class BookmarkProvider {
   }
 
   /// 新增书签
-  Future<bool> addBookmark({required String url}) async {
+  Future<bool> addBookmark({
+    required String url,
+    String? title,
+    DateTime? created,
+  }) async {
+    final data = <String, dynamic>{
+      'url': url,
+      'created': (created ?? DateTime.now().toUtc()).toIso8601String(),
+    };
+    if (title != null && title.trim().isNotEmpty) {
+      data['title'] = title.trim();
+    }
+
     await _api.request<Map<String, dynamic>?>('/api/bookmarks',
         method: 'POST',
-        data: {
-          'url': url,
-        },
+        data: data,
         parser: (data) => data is Map<String, dynamic> ? data : null);
     return true;
   }

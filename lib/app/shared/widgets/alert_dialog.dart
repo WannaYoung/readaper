@@ -19,18 +19,24 @@ class CustomAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
+      backgroundColor:
+          theme.appBarTheme.backgroundColor ?? theme.scaffoldBackgroundColor,
+      surfaceTintColor: Colors.transparent,
       elevation: 8.0,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
+              textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -39,6 +45,7 @@ class CustomAlertDialog extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               description,
+              textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: 15,
               ),

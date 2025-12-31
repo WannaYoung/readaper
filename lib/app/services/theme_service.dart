@@ -11,14 +11,20 @@ class ThemeService extends GetxService {
     ThemeData(
       brightness: Brightness.light,
       fontFamily: 'NotoSerifSC',
-      primaryColor: const Color(0xFF000000),
+      primaryColor: const Color(0xFF2E2E2E),
       scaffoldBackgroundColor: const Color(0xFFFBFBFB),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFFFBFBFB),
         foregroundColor: Colors.black,
         elevation: 0.5,
       ),
-      colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF000000)),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Color(0xFF2E2E2E),
+        brightness: Brightness.light,
+      ).copyWith(
+        primary: Color(0xFF2E2E2E),
+        onPrimary: Colors.white,
+      ),
     ),
     ThemeData(
       brightness: Brightness.light,
@@ -30,12 +36,18 @@ class ThemeService extends GetxService {
         foregroundColor: Colors.black,
         elevation: 0.5,
       ),
-      colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFF7B045)),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Color(0xFFF7B045),
+        brightness: Brightness.light,
+      ).copyWith(
+        primary: Color(0xFFF7B045),
+        onPrimary: Colors.black,
+      ),
     ),
     ThemeData(
       brightness: Brightness.dark,
       fontFamily: 'NotoSerifSC',
-      primaryColor: const Color(0xFF323232),
+      primaryColor: const Color(0xFF42BBD6),
       scaffoldBackgroundColor: const Color(0xFF232323),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF232323),
@@ -43,7 +55,12 @@ class ThemeService extends GetxService {
         elevation: 0.5,
       ),
       colorScheme: ColorScheme.fromSeed(
-          seedColor: Color(0xFF323232), brightness: Brightness.dark),
+        seedColor: Color(0xFF42BBD6),
+        brightness: Brightness.dark,
+      ).copyWith(
+        primary: Color(0xFF42BBD6),
+        onPrimary: Colors.black,
+      ),
     ),
   ];
 

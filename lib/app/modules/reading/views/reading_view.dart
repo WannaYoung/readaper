@@ -43,7 +43,7 @@ class ReadingView extends GetView<ReadingController> {
                                 ? const Icon(Icons.favorite)
                                 : const Icon(Icons.favorite_border_outlined),
                             color: controller.article.value.isMarked
-                                ? const Color.fromARGB(255, 251, 84, 72)
+                                ? Theme.of(Get.context!).primaryColor
                                 : null,
                             onPressed: controller.clickFavorite,
                           )),
@@ -52,7 +52,7 @@ class ReadingView extends GetView<ReadingController> {
                                 ? const Icon(Icons.archive)
                                 : const Icon(Icons.archive_outlined),
                             color: controller.article.value.isArchived
-                                ? const Color.fromARGB(255, 247, 176, 69)
+                                ? Theme.of(Get.context!).primaryColor
                                 : null,
                             onPressed: controller.clickArchive,
                           )),
@@ -91,9 +91,10 @@ class ReadingView extends GetView<ReadingController> {
   Widget _buildBody() {
     return Obx(() {
       if (controller.loading.value && !controller.isReady.value) {
+        final theme = Theme.of(Get.context!);
         return Center(
           child: LoadingAnimationWidget.discreteCircle(
-            color: const Color.fromARGB(255, 67, 67, 67),
+            color: theme.textTheme.bodyMedium?.color ?? theme.hintColor,
             size: 40,
           ),
         );

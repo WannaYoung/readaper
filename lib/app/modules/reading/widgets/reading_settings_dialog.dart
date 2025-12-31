@@ -66,6 +66,7 @@ class ReadingSettingsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(30, 8, 30, 24),
       child: Obx(() => Column(
@@ -79,7 +80,7 @@ class ReadingSettingsDialog extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.3),
+                    color: theme.dividerColor.withAlpha(140),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -87,9 +88,10 @@ class ReadingSettingsDialog extends StatelessWidget {
               // 标题
               Text(
                 'readingSettings'.tr,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: theme.textTheme.titleLarge?.color,
                 ),
               ),
               const SizedBox(height: 24),
@@ -114,6 +116,9 @@ class ReadingSettingsDialog extends StatelessWidget {
                       controller.resetSettings();
                       controller.applyTempSettings();
                     },
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.colorScheme.primary,
+                    ),
                     child: Text('reset'.tr),
                   ),
                   ElevatedButton(
@@ -121,6 +126,11 @@ class ReadingSettingsDialog extends StatelessWidget {
                       controller.saveSettings();
                       Get.back();
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      elevation: 0,
+                    ),
                     child: Text('save'.tr),
                   ),
                 ],
@@ -164,6 +174,12 @@ class ReadingSettingsDialog extends StatelessWidget {
                     overlayRadius: 20,
                   ),
                   trackShape: CustomTrackShape(),
+                  activeTrackColor: Theme.of(Get.context!).colorScheme.primary,
+                  inactiveTrackColor:
+                      Theme.of(Get.context!).dividerColor.withAlpha(120),
+                  thumbColor: Theme.of(Get.context!).colorScheme.primary,
+                  overlayColor:
+                      Theme.of(Get.context!).colorScheme.primary.withAlpha(40),
                 ),
                 child: Slider(
                   value: value,

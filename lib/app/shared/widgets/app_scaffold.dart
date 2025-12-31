@@ -16,8 +16,9 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: backgroundColor ?? Colors.white,
+      backgroundColor: backgroundColor ?? theme.scaffoldBackgroundColor,
       appBar: appBar,
       drawer: drawer,
       body: body,

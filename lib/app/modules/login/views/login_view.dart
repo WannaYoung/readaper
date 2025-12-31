@@ -66,7 +66,7 @@ class LoginView extends GetView<LoginController> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: theme.cardColor,
         contentPadding:
             const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         border: OutlineInputBorder(
@@ -103,15 +103,17 @@ class LoginView extends GetView<LoginController> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
+          backgroundColor: theme.primaryColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
           ),
           elevation: 0,
         ),
         onPressed: controller.login,
-        child: Text('login'.tr,
-            style: const TextStyle(fontSize: 18, color: Colors.white)),
+        child: Text(
+          'login'.tr,
+          style: TextStyle(fontSize: 18, color: theme.colorScheme.onPrimary),
+        ),
       ),
     );
   }

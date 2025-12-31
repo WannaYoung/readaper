@@ -5,6 +5,7 @@ import '../providers/bookmark_provider.dart';
 import '../models/bookmark.dart';
 import '../models/bookmark_counts.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../../../network/api_client.dart';
 import '../../../services/bookmark_db_service.dart';
 import '../../../services/bookmark_sync_service.dart';
@@ -229,5 +230,45 @@ class HomeController extends GetxController {
     // 同步当前侧边栏选中项（用于顶部标题展示/筛选）
     currentSidebarKey.value = sidebarItems[index]['title'] as String;
     fetchArticles(refresh: true);
+  }
+
+  Future<bool> addBookmark({
+    required String url,
+    String? title,
+  }) async {
+    final trimmedUrl = url.trim();
+    if (trimmedUrl.isEmpty) {
+      Get.snackbar('failed'.tr, 'fillAllFields'.tr);
+      return false;
+    }
+
+    try {
+      EasyLoading.show();
+      await provider.addBookmark(
+        url: trimmedUrl,
+        title: title,
+        created: DateTime.now().toUtc(),
+      );
+
+      // 添加成功后延迟 2 秒再移除 loading，再刷新列表
+      await Future.delayed(const Duration(seconds: 2));
+      EasyLoading.dismiss();
+
+      Get.snackbar('success'.tr, 'success'.tr);
+
+      // 新增后回到“全部”并刷新（避免二次 loading）
+      currentSidebarKey.value = 'all';
+      await _list.fetch(
+        refresh: true,
+        baseParams: buildFilterParams(),
+        showLoading: false,
+      );
+      await refreshCounts();
+      return true;
+    } catch (e) {
+      EasyLoading.dismiss();
+      _showError(e);
+      return false;
+    }
   }
 }

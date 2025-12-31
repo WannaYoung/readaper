@@ -13,6 +13,7 @@ class SettingView extends GetView<SettingController> {
 
   Widget _buildSection({
     required String title,
+    double? titleBottomPadding,
     required Widget child,
     Widget? trailing,
   }) {
@@ -31,14 +32,16 @@ class SettingView extends GetView<SettingController> {
             if (trailing != null) trailing,
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: titleBottomPadding ?? 10),
         child,
+        _divider(),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('settings'.tr, style: TextStyle(fontSize: 20)),
@@ -50,16 +53,11 @@ class SettingView extends GetView<SettingController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildLanguageSelector(),
-              _divider(),
-              _buildThemeSelector(),
-              _divider(),
-              _buildSyncSettings(),
-              _divider(),
+              _buildLanguageSelector(theme),
+              _buildThemeSelector(theme),
+              _buildSyncSettings(theme),
               _buildAccountInfo(),
-              _divider(),
               _buildAboutVersion(),
-              _divider(),
               _buildLogoutButton(),
             ],
           ),
@@ -69,9 +67,10 @@ class SettingView extends GetView<SettingController> {
   }
 
   /// 同步设置
-  Widget _buildSyncSettings() {
+  Widget _buildSyncSettings(ThemeData theme) {
     return _buildSection(
       title: 'syncSettings'.tr,
+      titleBottomPadding: 8,
       trailing: Obx(() {
         return IconButton(
           tooltip: 'syncNow'.tr,
@@ -79,11 +78,11 @@ class SettingView extends GetView<SettingController> {
               controller.syncRunning.value ? null : () => controller.syncNow(),
           icon: controller.syncRunning.value
               ? const SizedBox(
-                  width: 18,
-                  height: 18,
+                  width: 15,
+                  height: 15,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.sync),
+              : const Icon(Icons.sync, size: 20),
         );
       }),
       child: Obx(() {
@@ -107,9 +106,12 @@ class SettingView extends GetView<SettingController> {
                       child: Container(
                         height: 35,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.cardColor,
                           border: isSelected
-                              ? Border.all(color: Colors.blue, width: 1.5)
+                              ? Border.all(
+                                  color: theme.colorScheme.primary,
+                                  width: 1.5,
+                                )
                               : Border.all(color: Colors.transparent),
                           borderRadius: BorderRadius.circular(3),
                         ),
@@ -118,7 +120,10 @@ class SettingView extends GetView<SettingController> {
                           labelKey.tr,
                           style: TextStyle(
                             fontSize: 13,
-                            color: isSelected ? Colors.black87 : Colors.black45,
+                            color: isSelected
+                                ? theme.textTheme.bodyMedium?.color
+                                : theme.textTheme.bodyMedium?.color
+                                    ?.withAlpha(160),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -134,7 +139,7 @@ class SettingView extends GetView<SettingController> {
                 Expanded(
                   child: Text(
                     '${'lastSync'.tr}：${controller.lastSyncText.value}',
-                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
               ],
@@ -145,7 +150,7 @@ class SettingView extends GetView<SettingController> {
                 Expanded(
                   child: Text(
                     '${'nextSync'.tr}：${controller.nextSyncText.value}',
-                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
               ],
@@ -166,15 +171,16 @@ class SettingView extends GetView<SettingController> {
           height: 1,
           thickness: 0.8,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
       ],
     );
   }
 
   /// 语言选择控件
-  Widget _buildLanguageSelector() {
+  Widget _buildLanguageSelector(ThemeData theme) {
     return _buildSection(
       title: 'language'.tr,
+      titleBottomPadding: 12,
       child: Obx(() {
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -189,9 +195,12 @@ class SettingView extends GetView<SettingController> {
                   child: Container(
                     height: 35,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardColor,
                       border: isSelected
-                          ? Border.all(color: Colors.blue, width: 1.5)
+                          ? Border.all(
+                              color: theme.colorScheme.primary,
+                              width: 1.5,
+                            )
                           : Border.all(color: Colors.transparent),
                       borderRadius: BorderRadius.circular(3),
                     ),
@@ -200,7 +209,9 @@ class SettingView extends GetView<SettingController> {
                       SettingController.languageOptions[index],
                       style: TextStyle(
                         fontSize: 15,
-                        color: isSelected ? Colors.black87 : Colors.black26,
+                        color: isSelected
+                            ? theme.textTheme.bodyLarge?.color
+                            : theme.textTheme.bodyLarge?.color?.withAlpha(140),
                       ),
                     ),
                   ),
@@ -214,9 +225,10 @@ class SettingView extends GetView<SettingController> {
   }
 
   /// 主题选择控件
-  Widget _buildThemeSelector() {
+  Widget _buildThemeSelector(ThemeData theme) {
     return _buildSection(
       title: 'theme'.tr,
+      titleBottomPadding: 12,
       child: Obx(() {
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -233,7 +245,10 @@ class SettingView extends GetView<SettingController> {
                     decoration: BoxDecoration(
                       color: SettingController.themeColors[index],
                       border: isSelected
-                          ? Border.all(color: Colors.blue, width: 1.5)
+                          ? Border.all(
+                              color: theme.colorScheme.primary,
+                              width: 1.5,
+                            )
                           : Border.all(color: Colors.transparent),
                       borderRadius: BorderRadius.circular(3),
                     ),
@@ -256,20 +271,27 @@ class SettingView extends GetView<SettingController> {
         final user = controller.userProfile.value?.user;
         if (user == null) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text('loading'.tr, style: TextStyle(color: Colors.grey)),
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Text(
+              'loading'.tr,
+              style: TextStyle(
+                color: (Theme.of(Get.context!).textTheme.bodyMedium?.color ??
+                        Theme.of(Get.context!).hintColor)
+                    .withAlpha(170),
+              ),
+            ),
           );
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 5),
               child: Text('${'user'.tr}：${user.username}',
                   style: TextStyle(fontSize: 15)),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 5),
               child: Text('${'email'.tr}：${user.email}',
                   style: TextStyle(fontSize: 15)),
             ),
@@ -284,7 +306,7 @@ class SettingView extends GetView<SettingController> {
     return _buildSection(
       title: 'about'.tr,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 5),
         child: Text('${'version'.tr}：0.0.1-202505221',
             style: TextStyle(fontSize: 15)),
       ),

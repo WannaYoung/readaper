@@ -28,6 +28,13 @@ class HomeView extends GetView<HomeController> {
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: _buildAppBar(theme),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _showAddBookmarkDialog(context),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add),
+        ),
         body: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onHorizontalDragStart: (_) =>
@@ -44,7 +51,7 @@ class HomeView extends GetView<HomeController> {
           child: Stack(
             children: [
               _buildArticleList(),
-              _buildSidebarMask(),
+              _buildSidebarMask(context),
               _buildSidebar(sidebarWidth, context),
             ],
           ),
@@ -53,9 +60,138 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
+  Future<void> _showAddBookmarkDialog(BuildContext context) async {
+    final theme = Theme.of(context);
+    final urlController = TextEditingController();
+    final titleController = TextEditingController();
+
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            backgroundColor: theme.appBarTheme.backgroundColor ??
+                theme.scaffoldBackgroundColor,
+            surfaceTintColor: Colors.transparent,
+            elevation: 8.0,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '新增书签',
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: urlController,
+                    decoration: InputDecoration(
+                      labelText: 'URL（必填）',
+                      hintText: 'https://example.com',
+                      filled: true,
+                      fillColor: theme.cardColor,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    keyboardType: TextInputType.url,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: '标题（可选）',
+                      filled: true,
+                      fillColor: theme.cardColor,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(dialogContext).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: theme.primaryColor),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Center(
+                              child: Text('cancel'.tr),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            final ok = await controller.addBookmark(
+                              url: urlController.text,
+                              title: titleController.text,
+                            );
+                            if (ok && dialogContext.mounted) {
+                              Navigator.of(dialogContext).pop();
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'confirm'.tr,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } finally {
+      urlController.dispose();
+      titleController.dispose();
+    }
+  }
+
   /// 顶部栏
   PreferredSizeWidget _buildAppBar(ThemeData theme) {
     return AppBar(
+      titleSpacing: 5,
       leading: Obx(() => IconButton(
             icon: Icon(
               controller.isSidebarOpen ? Icons.close : Icons.menu,
@@ -68,7 +204,7 @@ class HomeView extends GetView<HomeController> {
             style: theme.textTheme.titleLarge?.copyWith(
               color: theme.textTheme.titleLarge?.color ?? theme.primaryColor,
               fontWeight: FontWeight.bold,
-              fontSize: 24,
+              fontSize: 23,
             ),
           )),
       centerTitle: false,
@@ -164,7 +300,8 @@ class HomeView extends GetView<HomeController> {
   }
 
   /// 侧边栏遮罩
-  Widget _buildSidebarMask() {
+  Widget _buildSidebarMask(BuildContext context) {
+    final theme = Theme.of(context);
     return Obx(() {
       final ratio = controller.sidebarOpenRatio.value;
       return IgnorePointer(
@@ -172,7 +309,7 @@ class HomeView extends GetView<HomeController> {
         child: GestureDetector(
           onTap: controller.closeSidebar,
           child: Container(
-            color: Colors.black.withAlpha((80 * ratio).round()),
+            color: theme.colorScheme.onSurface.withAlpha((70 * ratio).round()),
             width: double.infinity,
             height: double.infinity,
           ),
@@ -212,7 +349,7 @@ class HomeView extends GetView<HomeController> {
                   controller.onSidebarTap,
                 ),
                 if (i != controller.sidebarItems.length - 1)
-                  const Divider(color: Color(0x14000000)),
+                  Divider(color: theme.dividerColor.withAlpha(80)),
               ],
             ],
           ),
