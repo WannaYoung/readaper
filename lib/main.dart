@@ -10,6 +10,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app/services/localization_service.dart';
 import 'app/services/theme_service.dart';
 import 'app/services/bookmark_sync_service.dart';
+import 'app/services/share_intent_service.dart';
+import 'app/services/app_lifecycle_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,12 @@ void main() async {
 
   // 初始化书签同步服务（前台定时）
   BookmarkSyncService().init();
+
+  // 初始化分享接收服务（从其它 App 分享链接到本 App）
+  Get.put(ShareIntentService()).init();
+
+  // 初始化生命周期监听（App 进入前台时处理分享/剪贴板）
+  Get.put(AppLifecycleService()).init();
 
   runApp(GetMaterialApp(
     title: "Readaper",

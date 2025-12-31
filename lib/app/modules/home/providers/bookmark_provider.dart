@@ -44,14 +44,20 @@ class BookmarkProvider {
   ///
   /// - isMarked：收藏/取消收藏
   /// - isArchived：归档/取消归档
+  /// - title：编辑标题
+  /// - readProgress：已读/未读（0=未读，100=已读）
   Future<bool> updateBookmarkStatus(
     String id, {
     bool? isMarked,
     bool? isArchived,
+    String? title,
+    int? readProgress,
   }) async {
     final data = <String, dynamic>{};
     if (isMarked != null) data['is_marked'] = isMarked;
     if (isArchived != null) data['is_archived'] = isArchived;
+    if (title != null) data['title'] = title;
+    if (readProgress != null) data['read_progress'] = readProgress;
     await _api.request<Map<String, dynamic>?>(
       '/api/bookmarks/$id',
       method: 'PATCH',

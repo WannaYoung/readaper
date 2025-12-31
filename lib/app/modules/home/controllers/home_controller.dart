@@ -4,11 +4,16 @@ import '../controllers/sidebar_gesture_controller.dart';
 import '../providers/bookmark_provider.dart';
 import '../models/bookmark.dart';
 import '../models/bookmark_counts.dart';
+import '../widgets/add_bookmark_dialog.dart';
+import '../widgets/edit_bookmark_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get_storage/get_storage.dart';
 import '../../../network/api_client.dart';
 import '../../../services/bookmark_db_service.dart';
 import '../../../services/bookmark_sync_service.dart';
+import '../../../services/share_intent_service.dart';
 
 /// 首页控制器
 ///
@@ -27,6 +32,8 @@ class HomeController extends GetxController {
 
   /// 侧边栏数量统计（来自本地数据库聚合）
   final counts = const BookmarkCounts().obs;
+
+  final RxBool _isAddBookmarkDialogOpen = false.obs;
 
   /// 筛选 key => 请求参数映射（不包含分页/排序参数）
   static const Map<String, Map<String, dynamic>> _filterParamsMap = {
@@ -116,7 +123,85 @@ class HomeController extends GetxController {
       await refreshCounts();
       await BookmarkSyncService().syncNow();
       await refreshCounts();
+
+      // 首帧后尝试消费分享进来的 URL（例如从其它 App 分享链接打开）
+      if (Get.isRegistered<ShareIntentService>()) {
+        ShareIntentService.to.consumePendingUrlIfAny();
+      }
     });
+  }
+
+  Future<void> showAddBookmarkDialog({String? initialUrl}) async {
+    final context = Get.context;
+    if (context == null) return;
+
+    if (_isAddBookmarkDialogOpen.value) return;
+    _isAddBookmarkDialogOpen.value = true;
+
+    final urlController = TextEditingController(text: initialUrl ?? '');
+    final titleController = TextEditingController();
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return AddBookmarkDialog(
+            urlController: urlController,
+            titleController: titleController,
+            onConfirm: () async {
+              final ok = await addBookmark(
+                url: urlController.text,
+                title: titleController.text,
+              );
+              if (ok && dialogContext.mounted) {
+                Navigator.of(dialogContext).pop();
+              }
+            },
+          );
+        },
+      );
+    } finally {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        urlController.dispose();
+        titleController.dispose();
+      });
+      _isAddBookmarkDialogOpen.value = false;
+    }
+  }
+
+  Future<void> consumeClipboardUrlIfAny() async {
+    final box = GetStorage();
+    final hasToken = box.read('token') != null;
+    if (!hasToken) return;
+
+    if (_isAddBookmarkDialogOpen.value) return;
+
+    try {
+      final data = await Clipboard.getData('text/plain');
+      final url = _extractFirstUrl(data?.text);
+      if (url == null) return;
+
+      final lastUrl = box.read('last_clipboard_url');
+      if (lastUrl == url) return;
+
+      box.write('last_clipboard_url', url);
+      await showAddBookmarkDialog(initialUrl: url);
+    } catch (_) {
+      return;
+    }
+  }
+
+  String? _extractFirstUrl(String? text) {
+    if (text == null) return null;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+
+    final reg = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
+    final match = reg.firstMatch(trimmed);
+    final url = match?.group(0);
+    if (url == null || url.trim().isEmpty) return null;
+    return url.trim();
   }
 
   /// 刷新侧边栏分类数量
@@ -142,6 +227,90 @@ class HomeController extends GetxController {
       await refreshCounts();
     } catch (_) {
       // 交由各子 controller 处理错误提示
+    }
+  }
+
+  Future<void> editBookmarkTitle(Bookmark bookmark) async {
+    final context = Get.context;
+    if (context == null) return;
+    final id = bookmark.id ?? '';
+    if (id.isEmpty) return;
+
+    final titleController =
+        TextEditingController(text: (bookmark.title ?? '').trim());
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return EditBookmarkDialog(
+            titleController: titleController,
+            onConfirm: () async {
+              final newTitle = titleController.text.trim();
+              if (newTitle.isEmpty) {
+                Get.snackbar('failed'.tr, 'fillAllFields'.tr);
+                return;
+              }
+
+              try {
+                EasyLoading.show();
+                await provider.updateBookmarkStatus(
+                  id,
+                  title: newTitle,
+                );
+                EasyLoading.dismiss();
+
+                Navigator.of(dialogContext).pop();
+                await _list.fetch(
+                  refresh: true,
+                  baseParams: buildFilterParams(),
+                  showLoading: false,
+                );
+                await refreshCounts();
+                Get.snackbar('success'.tr, 'success'.tr);
+              } catch (e) {
+                EasyLoading.dismiss();
+                _showError(e);
+              }
+            },
+          );
+        },
+      );
+    } finally {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        titleController.dispose();
+      });
+    }
+  }
+
+  Future<void> toggleReadStatus(Bookmark bookmark) async {
+    final id = bookmark.id ?? '';
+    if (id.isEmpty) return;
+
+    final isRead = bookmark.readProgress >= 100;
+    final nextProgress = isRead ? 0 : 100;
+
+    try {
+      await provider.updateBookmarkStatus(
+        id,
+        readProgress: nextProgress,
+      );
+
+      final newCounts = await _db.updateBookmarkAndGetCounts(
+        id,
+        readProgress: nextProgress,
+      );
+      counts.value = newCounts;
+
+      await _list.fetch(
+        refresh: true,
+        baseParams: buildFilterParams(),
+        showLoading: false,
+      );
+      Get.snackbar('success'.tr, 'success'.tr);
+    } catch (e) {
+      _showError(e);
     }
   }
 

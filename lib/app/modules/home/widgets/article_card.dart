@@ -45,6 +45,8 @@ class ArticleCard extends StatelessWidget {
       backgroundColor: theme.primaryColor,
     );
 
+    final isRead = bookmark.readProgress >= 100;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: PieMenu(
@@ -56,8 +58,22 @@ class ArticleCard extends StatelessWidget {
         },
         actions: [
           PieAction(
-            tooltip: Text(bookmark.isMarked ? 'unfavorite'.tr : 'favorite'.tr),
+            tooltip: Text('edit'.tr),
             onSelect: () => onPieAction?.call(0),
+            buttonTheme: pieButtonTheme,
+            buttonThemeHovered: pieButtonThemeHovered,
+            child: const Icon(Icons.edit),
+          ),
+          PieAction(
+            tooltip: Text(isRead ? 'markUnread'.tr : 'markRead'.tr),
+            onSelect: () => onPieAction?.call(1),
+            buttonTheme: pieButtonTheme,
+            buttonThemeHovered: pieButtonThemeHovered,
+            child: Icon(isRead ? Icons.markunread : Icons.done),
+          ),
+          PieAction(
+            tooltip: Text(bookmark.isMarked ? 'unfavorite'.tr : 'favorite'.tr),
+            onSelect: () => onPieAction?.call(2),
             buttonTheme:
                 bookmark.isMarked ? favoriteButtonTheme : pieButtonTheme,
             buttonThemeHovered: pieButtonThemeHovered,
@@ -65,7 +81,7 @@ class ArticleCard extends StatelessWidget {
           ),
           PieAction(
             tooltip: Text(bookmark.isArchived ? 'unarchive'.tr : 'archive'.tr),
-            onSelect: () => onPieAction?.call(1),
+            onSelect: () => onPieAction?.call(3),
             buttonTheme:
                 bookmark.isArchived ? archiveButtonTheme : pieButtonTheme,
             buttonThemeHovered: pieButtonThemeHovered,
@@ -73,14 +89,14 @@ class ArticleCard extends StatelessWidget {
           ),
           PieAction(
             tooltip: Text('share'.tr),
-            onSelect: () => onPieAction?.call(2),
+            onSelect: () => onPieAction?.call(4),
             buttonTheme: pieButtonTheme,
             buttonThemeHovered: pieButtonThemeHovered,
             child: const Icon(Icons.share),
           ),
           PieAction(
             tooltip: Text('delete'.tr),
-            onSelect: () => onPieAction?.call(3),
+            onSelect: () => onPieAction?.call(5),
             buttonTheme: pieButtonTheme,
             buttonThemeHovered: PieButtonTheme(
               iconColor: Colors.white,

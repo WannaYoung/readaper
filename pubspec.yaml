@@ -20,6 +20,7 @@ dependencies:
   pie_menu: ^3.3.0
   sqflite: ^2.3.3+1
   get_storage: ^2.1.1
+  share_plus: ^10.0.2
   extended_image: ^8.2.1
   cupertino_icons: ^1.0.8
   haptic_feedback: ^0.5.1+1
