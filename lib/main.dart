@@ -105,7 +105,7 @@ void configEasyLoading() {
     ..indicatorColor = Colors.yellow
     ..textColor = Colors.yellow
     ..maskType = EasyLoadingMaskType.custom
-    ..maskColor = Colors.white.withAlpha(200)
+    ..maskColor = Colors.black.withAlpha(120)
     ..userInteractions = false
     ..dismissOnTap = false;
 }

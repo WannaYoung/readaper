@@ -85,6 +85,13 @@ CREATE TABLE $_tableBookmarks (
     });
   }
 
+  /// 批量写入/更新书签，并返回最新侧边栏统计
+  Future<BookmarkCounts> upsertBookmarksAndGetCounts(
+      List<Bookmark> bookmarks) async {
+    await upsertBookmarks(bookmarks);
+    return getCounts();
+  }
+
   /// 更新书签状态（收藏/归档/阅读进度等）
   Future<void> updateBookmark(
     String id, {
@@ -121,6 +128,38 @@ CREATE TABLE $_tableBookmarks (
   Future<void> deleteBookmark(String id) async {
     final db = await _database();
     await db.delete(_tableBookmarks, where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// 删除书签（物理删除），并返回最新侧边栏统计
+  Future<BookmarkCounts> deleteBookmarkAndGetCounts(String id) async {
+    await deleteBookmark(id);
+    return getCounts();
+  }
+
+  /// 更新书签状态，并返回最新侧边栏统计
+  Future<BookmarkCounts> updateBookmarkAndGetCounts(
+    String id, {
+    bool? isMarked,
+    bool? isArchived,
+    bool? isDeleted,
+    int? readProgress,
+    String? type,
+    int? state,
+    bool? loaded,
+    String? updated,
+  }) async {
+    await updateBookmark(
+      id,
+      isMarked: isMarked,
+      isArchived: isArchived,
+      isDeleted: isDeleted,
+      readProgress: readProgress,
+      type: type,
+      state: state,
+      loaded: loaded,
+      updated: updated,
+    );
+    return getCounts();
   }
 
   /// 统计侧边栏数量

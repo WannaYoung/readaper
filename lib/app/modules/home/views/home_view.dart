@@ -19,7 +19,7 @@ class HomeView extends GetView<HomeController> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    final sidebarWidth = screenWidth * 0.6;
+    final sidebarWidth = screenWidth * 0.7;
 
     return PieCanvas(
       theme: PieTheme(
@@ -28,12 +28,26 @@ class HomeView extends GetView<HomeController> {
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: _buildAppBar(theme),
-        body: Stack(
-          children: [
-            _buildArticleList(),
-            _buildSidebarMask(),
-            _buildSidebar(sidebarWidth, context),
-          ],
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragStart: (_) =>
+              controller.onSidebarHorizontalDragStart(),
+          onHorizontalDragUpdate: (details) =>
+              controller.onSidebarHorizontalDragUpdate(
+            deltaDx: details.delta.dx,
+            sidebarWidth: sidebarWidth,
+          ),
+          onHorizontalDragEnd: (details) =>
+              controller.onSidebarHorizontalDragEnd(
+            velocityDx: details.velocity.pixelsPerSecond.dx,
+          ),
+          child: Stack(
+            children: [
+              _buildArticleList(),
+              _buildSidebarMask(),
+              _buildSidebar(sidebarWidth, context),
+            ],
+          ),
         ),
       ),
     );
@@ -44,20 +58,19 @@ class HomeView extends GetView<HomeController> {
     return AppBar(
       leading: Obx(() => IconButton(
             icon: Icon(
-              controller.isSidebarOpen.value ? Icons.close : Icons.menu,
+              controller.isSidebarOpen ? Icons.close : Icons.menu,
               color: theme.iconTheme.color,
             ),
-            onPressed: () => controller.isSidebarOpen.value =
-                !controller.isSidebarOpen.value,
+            onPressed: controller.toggleSidebar,
           )),
-      title: Text(
-        'readaper'.tr,
-        style: theme.textTheme.titleLarge?.copyWith(
-          color: theme.textTheme.titleLarge?.color ?? theme.primaryColor,
-          fontWeight: FontWeight.bold,
-          fontSize: 25,
-        ),
-      ),
+      title: Obx(() => Text(
+            controller.currentSidebarKey.value.tr,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.textTheme.titleLarge?.color ?? theme.primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
+          )),
       centerTitle: false,
       iconTheme: theme.iconTheme,
       actions: [
@@ -152,56 +165,60 @@ class HomeView extends GetView<HomeController> {
 
   /// 侧边栏遮罩
   Widget _buildSidebarMask() {
-    return Obx(() => IgnorePointer(
-          ignoring: !controller.isSidebarOpen.value,
-          child: AnimatedOpacity(
-            opacity: controller.isSidebarOpen.value ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: GestureDetector(
-              onTap: () => controller.isSidebarOpen.value = false,
-              child: Container(
-                color: Colors.black.withAlpha(150),
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
+    return Obx(() {
+      final ratio = controller.sidebarOpenRatio.value;
+      return IgnorePointer(
+        ignoring: ratio <= 0,
+        child: GestureDetector(
+          onTap: controller.closeSidebar,
+          child: Container(
+            color: Colors.black.withAlpha((80 * ratio).round()),
+            width: double.infinity,
+            height: double.infinity,
           ),
-        ));
+        ),
+      );
+    });
   }
 
   /// 侧边栏
   Widget _buildSidebar(double sidebarWidth, BuildContext context) {
     final theme = Theme.of(context);
-    return Obx(() => AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.ease,
-          top: 0,
-          left: controller.isSidebarOpen.value ? 0 : -sidebarWidth,
-          width: sidebarWidth,
-          height: MediaQuery.of(context).size.height,
-          child: Material(
-            elevation: 8,
-            color: theme.appBarTheme.backgroundColor ??
-                theme.scaffoldBackgroundColor,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                for (var i = 0; i < controller.sidebarItems.length; i++) ...[
-                  _sidebarTile(
-                    i,
-                    controller.sidebarItems[i]['icon'] as IconData,
-                    (controller.sidebarItems[i]['title'] as String).tr,
-                    controller.getCountByKey(
-                        controller.sidebarItems[i]['title'] as String),
-                    controller.onSidebarTap,
-                  ),
-                  if (i != controller.sidebarItems.length - 1)
-                    const Divider(color: Color(0x14000000)),
-                ],
+    return Obx(() {
+      final ratio = controller.sidebarOpenRatio.value;
+      return AnimatedPositioned(
+        duration: controller.isSidebarDragging.value
+            ? Duration.zero
+            : const Duration(milliseconds: 300),
+        curve: Curves.ease,
+        top: 0,
+        left: -sidebarWidth * (1 - ratio),
+        width: sidebarWidth,
+        height: MediaQuery.of(context).size.height,
+        child: Material(
+          elevation: 8,
+          color: theme.appBarTheme.backgroundColor ??
+              theme.scaffoldBackgroundColor,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              for (var i = 0; i < controller.sidebarItems.length; i++) ...[
+                _sidebarTile(
+                  i,
+                  controller.sidebarItems[i]['icon'] as IconData,
+                  (controller.sidebarItems[i]['title'] as String).tr,
+                  controller.getCountByKey(
+                      controller.sidebarItems[i]['title'] as String),
+                  controller.onSidebarTap,
+                ),
+                if (i != controller.sidebarItems.length - 1)
+                  const Divider(color: Color(0x14000000)),
               ],
-            ),
+            ],
           ),
-        ));
+        ),
+      );
+    });
   }
 
   /// 侧边栏单项
