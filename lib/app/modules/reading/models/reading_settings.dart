@@ -17,9 +17,9 @@ class ReadingSettings {
   double lineHeight;
 
   // 默认值
-  static const double defaultHeadingFontSize = 25.0;
+  static const double defaultHeadingFontSize = 22.0;
   static const double defaultBodyFontSize = 17.0;
-  static const double defaultPagePadding = 20.0;
+  static const double defaultPagePadding = 24.0;
   static const double defaultLineHeight = 1.8;
 
   /// 构造函数

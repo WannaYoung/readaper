@@ -41,6 +41,9 @@ class EditBookmarkDialog extends StatelessWidget {
               const SizedBox(height: 16),
               TextField(
                 controller: titleController,
+                keyboardType: TextInputType.multiline,
+                minLines: 1,
+                maxLines: 6,
                 decoration: InputDecoration(
                   labelText: 'title'.tr,
                   filled: true,

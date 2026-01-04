@@ -4,6 +4,8 @@ import 'package:extended_image/extended_image.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:readaper/app/modules/reading/widgets/image_preview.dart';
+import 'package:readaper/app/services/browser_service.dart';
+import 'package:readaper/app/modules/reading/controllers/reading_controller.dart';
 import '../modules/reading/models/reading_settings.dart';
 
 /// Markdown 渲染配置服务
@@ -19,10 +21,46 @@ class MarkdownService {
   // 图片圆角
   static const double _imageBorderRadius = 4;
 
+  static Color _codeBackgroundColor() {
+    if (Get.isDarkMode) {
+      return const Color(0xFF2B2B2B);
+    }
+    return const Color(0xFFF5F5F5);
+  }
+
+  static Color _preBackgroundColor() {
+    if (Get.isDarkMode) {
+      return const Color(0xFF2B2B2B);
+    }
+    return const Color(0xFFF5F5F5);
+  }
+
+  static Color _imagePlaceholderBackgroundColor() {
+    if (Get.isDarkMode) {
+      return const Color(0xFF2B2B2B);
+    }
+    return const Color(0xFFF3F3F3);
+  }
+
+  static Color _imagePlaceholderForegroundColor() {
+    if (Get.isDarkMode) {
+      return const Color(0xFFBDBDBD);
+    }
+    return const Color(0xFF6B6B6B);
+  }
+
   /// 默认 Markdown 配置
   static MarkdownConfig get defaultConfig {
     return MarkdownConfig(
       configs: [
+        LinkConfig(
+          onTap: (url) {
+            // 点击链接：使用 App 内置浏览器打开
+            final link = url.trim();
+            if (link.isEmpty) return;
+            BrowserService.open(link, title: link);
+          },
+        ),
         const PConfig(
           textStyle: TextStyle(
             height: 1.8,
@@ -47,15 +85,15 @@ class MarkdownService {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const CodeConfig(
+        CodeConfig(
           style: TextStyle(
-            backgroundColor: Color(0xFFF5F5F5),
+            backgroundColor: _codeBackgroundColor(),
           ),
         ),
-        const PreConfig(
+        PreConfig(
           decoration: BoxDecoration(
-            color: Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.all(Radius.circular(4)),
+            color: _preBackgroundColor(),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
           ),
         ),
         _buildImageConfig(),
@@ -67,6 +105,14 @@ class MarkdownService {
   static MarkdownConfig configForSettings(ReadingSettings settings) {
     return MarkdownConfig(
       configs: [
+        LinkConfig(
+          onTap: (url) {
+            // 点击链接：使用 App 内置浏览器打开
+            final link = url.trim();
+            if (link.isEmpty) return;
+            BrowserService.open(link, title: link);
+          },
+        ),
         PConfig(
           textStyle: TextStyle(
             height: settings.lineHeight,
@@ -91,15 +137,15 @@ class MarkdownService {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const CodeConfig(
+        CodeConfig(
           style: TextStyle(
-            backgroundColor: Color(0xFFF5F5F5),
+            backgroundColor: _codeBackgroundColor(),
           ),
         ),
-        const PreConfig(
+        PreConfig(
           decoration: BoxDecoration(
-            color: Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.all(Radius.circular(4)),
+            color: _preBackgroundColor(),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
           ),
         ),
         _buildImageConfig(),
@@ -113,10 +159,38 @@ class MarkdownService {
       builder: (url, attributes) {
         return GestureDetector(
           onTap: () {
-            // 点击图片预览
+            // 点击图片：优先使用阅读页缓存的图片列表做预览，实现左右滑动浏览
+            var urls = <String>[url];
+            var initialIndex = 0;
+
+            try {
+              final controller = Get.find<ReadingController>();
+              final list = controller.imageUrls.toList();
+              if (list.isNotEmpty) {
+                urls = list;
+                final index = urls.indexOf(url);
+                if (index >= 0) {
+                  initialIndex = index;
+                }
+              }
+            } catch (_) {}
+
+            if (urls.isEmpty) {
+              // 极端兜底：至少保证有一张图可预览
+              urls = [url];
+            }
+
+            if (initialIndex < 0 || initialIndex >= urls.length) {
+              // 极端兜底：避免初始索引越界
+              initialIndex = 0;
+            }
+
             showDialog(
               context: Get.context!,
-              builder: (_) => ImagePreviewDialog(url: url),
+              builder: (_) => ImagePreviewDialog(
+                urls: urls,
+                initialIndex: initialIndex,
+              ),
             );
           },
           child: Container(
@@ -151,17 +225,23 @@ class MarkdownService {
       height: _imageLoadingHeight,
       alignment: Alignment.center,
       child: LoadingAnimationWidget.discreteCircle(
-          color: const Color.fromARGB(255, 67, 67, 67), size: 30),
+        color: _imagePlaceholderForegroundColor(),
+        size: 30,
+      ),
     );
   }
 
   /// 图片加载失败占位
   static Widget _buildImageFailed() {
     return Container(
-      color: Colors.grey[200],
+      color: _imagePlaceholderBackgroundColor(),
       height: _imageFailedHeight,
       alignment: Alignment.center,
-      child: const Icon(Icons.broken_image, size: 30, color: Colors.grey),
+      child: Icon(
+        Icons.broken_image,
+        size: 30,
+        color: _imagePlaceholderForegroundColor(),
+      ),
     );
   }
 }

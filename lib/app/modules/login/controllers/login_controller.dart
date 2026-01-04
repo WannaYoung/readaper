@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:readaper/app/config/env.dart';
 import 'package:readaper/app/routes/app_pages.dart';
+import 'package:readaper/app/services/auth_storage_service.dart';
 import '../providers/auth_provider.dart';
 import '../../../network/api_client.dart';
 import 'package:get_storage/get_storage.dart';
@@ -10,10 +11,25 @@ class LoginController extends GetxController {
   final AuthProvider provider;
   LoginController(this.provider);
 
-  final serverController = TextEditingController(text: env.host);
-  final usernameController = TextEditingController(text: env.user);
-  final passwordController = TextEditingController(text: env.password);
+  final serverController = TextEditingController();
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
   final box = GetStorage();
+  final AuthStorageService _authStorage = AuthStorageService();
+
+  @override
+  void onInit() {
+    super.onInit();
+
+    final savedServer = _authStorage.server;
+    final savedUsername = _authStorage.username;
+
+    serverController.text = savedServer.isNotEmpty ? savedServer : env.host;
+    usernameController.text =
+        savedUsername.isNotEmpty ? savedUsername : env.user;
+    // 密码不做持久化，每次进入登录页都清空
+    passwordController.clear();
+  }
 
   /// 执行登录
   ///
@@ -27,7 +43,8 @@ class LoginController extends GetxController {
       Get.snackbar('error'.tr, 'fillAllFields'.tr);
       return;
     }
-    box.write('server', server);
+    // 先写入 server，确保登录请求使用正确服务器
+    _authStorage.saveServer(server);
     try {
       final res = await provider.login(
         username: username,
@@ -36,6 +53,10 @@ class LoginController extends GetxController {
       if (res != null && res['token'] != null && res['id'] != null) {
         box.write('token', res['token']);
         box.write('id', res['id']);
+        // 登录成功后保存用户名，方便退出后自动填充
+        _authStorage.saveUsername(username);
+        // 登录成功后清空密码，避免返回登录页时残留
+        passwordController.clear();
         Get.offAllNamed(Routes.HOME);
       } else {
         final message = res is Map<String, dynamic>

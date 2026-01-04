@@ -4,6 +4,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:readaper/app/services/markdown_service.dart';
 import 'package:readaper/app/modules/reading/widgets/reading_settings_dialog.dart';
+import 'package:readaper/app/modules/reading/widgets/reading_appbar_popup.dart';
 import '../controllers/reading_controller.dart';
 
 /// 阅读页
@@ -43,7 +44,7 @@ class ReadingView extends GetView<ReadingController> {
                                 ? const Icon(Icons.favorite)
                                 : const Icon(Icons.favorite_border_outlined),
                             color: controller.article.value.isMarked
-                                ? Theme.of(Get.context!).primaryColor
+                                ? const Color(0xFFE53935)
                                 : null,
                             onPressed: controller.clickFavorite,
                           )),
@@ -52,7 +53,7 @@ class ReadingView extends GetView<ReadingController> {
                                 ? const Icon(Icons.archive)
                                 : const Icon(Icons.archive_outlined),
                             color: controller.article.value.isArchived
-                                ? Theme.of(Get.context!).primaryColor
+                                ? const Color(0xFFFF9800)
                                 : null,
                             onPressed: controller.clickArchive,
                           )),
@@ -79,6 +80,35 @@ class ReadingView extends GetView<ReadingController> {
                             );
                           },
                           icon: const Icon(Icons.text_format_outlined)),
+                      Builder(
+                        builder: (context) {
+                          final theme = Theme.of(context);
+                          final appBarTheme = AppBarTheme.of(context);
+                          final baseColor = appBarTheme.backgroundColor ??
+                              (theme.useMaterial3
+                                  ? theme.colorScheme.surface
+                                  : theme.primaryColor);
+                          final elevation = appBarTheme.elevation ?? 0;
+
+                          final backgroundColor = theme.useMaterial3
+                              ? ElevationOverlay.applySurfaceTint(
+                                  baseColor,
+                                  appBarTheme.surfaceTintColor ??
+                                      theme.colorScheme.surfaceTint,
+                                  elevation,
+                                )
+                              : ElevationOverlay.applyOverlay(
+                                  context,
+                                  baseColor,
+                                  elevation,
+                                );
+                          return ReadingAppBarPopup(
+                            backgroundColor: backgroundColor,
+                            onShare: controller.shareArticle,
+                            onOpenSource: controller.openSource,
+                          );
+                        },
+                      ),
                       const SizedBox(width: 10),
                     ],
                   )
@@ -103,7 +133,8 @@ class ReadingView extends GetView<ReadingController> {
         onRefresh: controller.fetchMarkdown,
         child: NotificationListener<ScrollNotification>(
           onNotification: (ScrollNotification notification) {
-            if (notification is ScrollUpdateNotification) {
+            if (notification is ScrollUpdateNotification &&
+                notification.dragDetails != null) {
               controller.handleScroll(notification.metrics.pixels);
             }
             return false;

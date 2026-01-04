@@ -56,6 +56,8 @@ class AppTranslations extends Translations {
           'lineSpacing': '行距',
           'font': '字体',
           'reset': '重置',
+          'shareArticle': '分享文章',
+          'openSource': '打开来源',
           // 设置
           'settings': '设置',
           'language': '语言',
@@ -91,6 +93,14 @@ class AppTranslations extends Translations {
           'settingsSaved': '设置已保存',
           'loadFailed': '加载失败',
           'loadReadingSettingsFailed': '加载阅读设置失败',
+
+          'layoutStyle': '布局样式',
+          'layoutList': '列表',
+          'layoutWaterfall': '瀑布流',
+          'layoutGrid': '网格',
+          'previewImage': '预览图',
+          'summary': '摘要',
+          'homeTitleSize': '标题大小',
         },
         'zh_TW': {
           //通用
@@ -145,6 +155,8 @@ class AppTranslations extends Translations {
           'lineSpacing': '行距',
           'font': '字體',
           'reset': '重置',
+          'shareArticle': '分享文章',
+          'openSource': '打開來源',
           // 设置
           'settings': '設置',
           'language': '語言',
@@ -180,6 +192,14 @@ class AppTranslations extends Translations {
           'settingsSaved': '設定已儲存',
           'loadFailed': '載入失敗',
           'loadReadingSettingsFailed': '載入閱讀設定失敗',
+
+          'layoutStyle': '佈局樣式',
+          'layoutList': '列表',
+          'layoutWaterfall': '瀑布流',
+          'layoutGrid': '網格',
+          'previewImage': '預覽圖',
+          'summary': '摘要',
+          'homeTitleSize': '標題大小',
         },
         'en_US': {
           //通用
@@ -235,6 +255,8 @@ class AppTranslations extends Translations {
           'lineSpacing': 'Line Spacing',
           'font': 'Font',
           'reset': 'Reset',
+          'shareArticle': 'Share Article',
+          'openSource': 'Open Source',
           // 设置
           'settings': 'Settings',
           'language': 'Language',
@@ -270,6 +292,14 @@ class AppTranslations extends Translations {
           'settingsSaved': 'Settings saved',
           'loadFailed': 'Load failed',
           'loadReadingSettingsFailed': 'Failed to load reading settings',
+
+          'layoutStyle': 'Layout Style',
+          'layoutList': 'List',
+          'layoutWaterfall': 'Waterfall',
+          'layoutGrid': 'Grid',
+          'previewImage': 'Preview Image',
+          'summary': 'Summary',
+          'homeTitleSize': 'Title Size',
         },
       };
 }

@@ -13,12 +13,6 @@ class LoginView extends GetView<LoginController> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text('readaper'.tr,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -26,6 +20,11 @@ class LoginView extends GetView<LoginController> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 80),
+              Text('readaper'.tr,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 28)),
               const SizedBox(height: 32),
               _buildTextField(
                 controller: controller.serverController,

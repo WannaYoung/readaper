@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:readaper/app/modules/home/models/bookmark.dart';
 import 'package:readaper/app/modules/reading/models/reading_settings.dart';
 import 'package:readaper/app/modules/home/controllers/home_controller.dart';
+import 'package:readaper/app/services/browser_service.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../home/providers/bookmark_provider.dart';
 import '../../../network/api_client.dart';
 
@@ -20,6 +22,8 @@ class ReadingController extends GetxController {
   final lastOffset = 0.0.obs; // 滚动偏移
   final isReady = false.obs;
   final article = Bookmark().obs;
+
+  final imageUrls = <String>[].obs;
 
   // 阅读设置
   final settings = ReadingSettings().obs;
@@ -46,6 +50,23 @@ class ReadingController extends GetxController {
     }
   }
 
+  String _removeFirstImageAfterFirstH1(String text) {
+    final matchH1 = RegExp(r'^#\s+.+$', multiLine: true).firstMatch(text);
+    if (matchH1 == null) return text;
+
+    final start = matchH1.end;
+    if (start < 0 || start >= text.length) return text;
+
+    final after = text.substring(start);
+    final matchImage = RegExp(
+      r'^\s*(?:\r?\n)+\s*!\[[^\]]*\]\(\s*(?:<[^>]+>|[^)\s]+)(?:\s+"[^"]*")?\s*\)\s*(?:\r?\n+)?',
+    ).firstMatch(after);
+    if (matchImage == null) return text;
+
+    return text.substring(0, start) +
+        after.replaceRange(matchImage.start, matchImage.end, '\n');
+  }
+
   /// 加载阅读设置
   Future<void> loadSettings() async {
     final loadedSettings = await ReadingSettings.load();
@@ -54,10 +75,12 @@ class ReadingController extends GetxController {
   }
 
   /// 保存阅读设置
-  Future<void> saveSettings() async {
+  Future<void> saveSettings({bool showToast = true}) async {
     settings.value = tempSettings.value.copy();
     await settings.value.save();
-    Get.snackbar('success'.tr, 'settingsSaved'.tr);
+    if (showToast) {
+      Get.snackbar('success'.tr, 'settingsSaved'.tr);
+    }
   }
 
   /// 重置设置为默认值
@@ -87,12 +110,16 @@ class ReadingController extends GetxController {
           .replaceFirst(RegExp(r'^---[\s\S]*?---\s*'), '')
           .replaceAll('。**', '**');
 
+      processedContent = _removeFirstImageAfterFirstH1(processedContent);
+
       if (processedContent.trim().isEmpty) {
         processedContent = 'loadFailed'.tr;
       }
 
       // 更新内容
       markdown.value = processedContent;
+
+      imageUrls.value = _extractImageUrlsFromMarkdown(processedContent);
 
       // 延迟一帧再显示内容，让过渡更平滑
       await Future.delayed(const Duration(milliseconds: 50));
@@ -108,6 +135,25 @@ class ReadingController extends GetxController {
     } finally {
       loading.value = false;
     }
+  }
+
+  List<String> _extractImageUrlsFromMarkdown(String text) {
+    final urls = <String>[];
+    final seen = <String>{};
+
+    final matches = RegExp(r'!\[[^\]]*\]\(([^)\s]+)').allMatches(text);
+    for (final m in matches) {
+      final raw = (m.group(1) ?? '').trim();
+      if (raw.isEmpty) continue;
+      final url = raw.startsWith('<') && raw.endsWith('>')
+          ? raw.substring(1, raw.length - 1)
+          : raw;
+      if (url.isEmpty) continue;
+      if (seen.add(url)) {
+        urls.add(url);
+      }
+    }
+    return urls;
   }
 
   /// 收藏/取消收藏
@@ -132,6 +178,52 @@ class ReadingController extends GetxController {
         val?.isArchived = !article.value.isArchived;
       });
     });
+  }
+
+  /// 分享文章
+  ///
+  /// - 分享标题 + 链接
+  /// - 若链接为空则不执行
+  void shareArticle() {
+    final title = (article.value.title ?? '').trim();
+    final url = (article.value.url ?? '').trim();
+    if (url.isEmpty) return;
+
+    final text = title.isEmpty ? url : '$title\n$url';
+    Share.share(text);
+  }
+
+  /// 打开来源
+  ///
+  /// - 优先 labels.url，回退 article.url
+  void openSource() {
+    final url = _firstLabelUrl(article.value).trim();
+    if (url.isEmpty) return;
+
+    BrowserService.open(url, title: article.value.title);
+  }
+
+  /// 获取“来源链接”
+  ///
+  /// - 优先 labels.url，回退 bookmark.url
+  String _firstLabelUrl(Bookmark bookmark) {
+    try {
+      final labels = bookmark.labels;
+      if (labels == null) {
+        return (bookmark.url ?? '').trim();
+      }
+
+      for (final item in labels) {
+        if (item is Map) {
+          final raw = item['url'];
+          final url = (raw ?? '').toString().trim();
+          if (url.isNotEmpty) return url;
+        }
+      }
+      return (bookmark.url ?? '').trim();
+    } catch (_) {
+      return '';
+    }
   }
 
   /// 滚动监听，控制AppBar显隐

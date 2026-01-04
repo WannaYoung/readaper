@@ -3,11 +3,9 @@ class Bookmark {
   String? href;
   String? title;
   String? description;
+  String? siteName;
   String? site;
-  String? iconUrl;
-  String? articleUrl;
-  String? imageUrl;
-  String? thumbnailUrl;
+  String? published;
   String? url;
   String? created;
   String? updated;
@@ -25,16 +23,19 @@ class Bookmark {
   List<dynamic>? authors;
   List<dynamic>? labels;
 
+  BookmarkResources? resources;
+
+  int? wordCount;
+  int? readingTime;
+
   Bookmark({
     this.id,
     this.href,
     this.title,
     this.description,
+    this.siteName,
     this.site,
-    this.iconUrl,
-    this.articleUrl,
-    this.imageUrl,
-    this.thumbnailUrl,
+    this.published,
     this.url,
     this.created,
     this.updated,
@@ -51,24 +52,22 @@ class Bookmark {
     this.isDeleted = false,
     this.authors,
     this.labels,
+    this.resources,
+    this.wordCount,
+    this.readingTime,
   });
 
   factory Bookmark.fromJson(Map<String, dynamic> json) {
-    final resources = json['resources'] ?? {};
     return Bookmark(
       id: json['id'],
       href: json['href'],
       title: json['title'] ?? '',
       description: json['description'],
-      site: json['site_name'] ?? json['site'],
-      iconUrl: (resources['icon']?['src'] as String?)
-          ?.replaceFirst('http:', 'https:'),
-      articleUrl: resources['article']?['src']?.replaceFirst('http:', 'https:'),
-      imageUrl: resources['image']?['src']?.replaceFirst('http:', 'https:'),
-      thumbnailUrl:
-          resources['thumbnail']?['src']?.replaceFirst('http:', 'https:'),
+      siteName: json['site_name'],
+      site: json['site'],
+      published: json['published'],
       url: json['url'],
-      created: (json['created'] as String?)?.split('T').first,
+      created: json['created'],
       updated: json['updated'],
       state: (json['state'] is int) ? (json['state'] as int) : 0,
       loaded: json['loaded'] == true,
@@ -84,6 +83,14 @@ class Bookmark {
       isDeleted: json['is_deleted'] ?? false,
       authors: (json['authors'] is List) ? (json['authors'] as List) : null,
       labels: (json['labels'] is List) ? (json['labels'] as List) : null,
+      resources: json['resources'] is Map<String, dynamic>
+          ? BookmarkResources.fromJson(
+              json['resources'] as Map<String, dynamic>)
+          : null,
+      wordCount:
+          (json['word_count'] is int) ? (json['word_count'] as int) : null,
+      readingTime:
+          (json['reading_time'] is int) ? (json['reading_time'] as int) : null,
     );
   }
 
@@ -93,6 +100,7 @@ class Bookmark {
       'href': href,
       'title': title,
       'description': description,
+      'site_name': siteName,
       'site': site,
       'url': url,
       'created': created,
@@ -104,14 +112,29 @@ class Bookmark {
       'has_article': hasArticle,
       'lang': lang,
       'text_direction': textDirection,
+      'published': published,
       'read_progress': readProgress,
       'is_marked': isMarked,
       'is_archived': isArchived,
       'is_deleted': isDeleted,
       'authors': authors,
       'labels': labels,
+      'resources': resources?.toJson(),
+      'word_count': wordCount,
+      'reading_time': readingTime,
     };
   }
+
+  String? get iconUrl => resources?.icon?.src?.replaceFirst('http:', 'https:');
+
+  String? get articleUrl =>
+      resources?.article?.src?.replaceFirst('http:', 'https:');
+
+  String? get imageUrl =>
+      resources?.image?.src?.replaceFirst('http:', 'https:');
+
+  String? get thumbnailUrl =>
+      resources?.thumbnail?.src?.replaceFirst('http:', 'https:');
 
   Bookmark copyWith({
     bool? isMarked,
@@ -127,11 +150,9 @@ class Bookmark {
       href: href,
       title: title,
       description: description,
+      siteName: siteName,
       site: site,
-      iconUrl: iconUrl,
-      articleUrl: articleUrl,
-      imageUrl: imageUrl,
-      thumbnailUrl: thumbnailUrl,
+      published: published,
       url: url,
       created: created,
       updated: updated,
@@ -148,6 +169,84 @@ class Bookmark {
       isDeleted: isDeleted ?? this.isDeleted,
       authors: authors,
       labels: labels,
+      resources: resources,
+      wordCount: wordCount,
+      readingTime: readingTime,
     );
+  }
+}
+
+class BookmarkResources {
+  BookmarkResourceItem? article;
+  BookmarkResourceItem? icon;
+  BookmarkResourceItem? image;
+  BookmarkResourceItem? thumbnail;
+  BookmarkResourceItem? log;
+  BookmarkResourceItem? props;
+
+  BookmarkResources({
+    this.article,
+    this.icon,
+    this.image,
+    this.thumbnail,
+    this.log,
+    this.props,
+  });
+
+  factory BookmarkResources.fromJson(Map<String, dynamic> json) {
+    BookmarkResourceItem? parseItem(dynamic raw) {
+      if (raw is Map<String, dynamic>) {
+        return BookmarkResourceItem.fromJson(raw);
+      }
+      return null;
+    }
+
+    return BookmarkResources(
+      article: parseItem(json['article']),
+      icon: parseItem(json['icon']),
+      image: parseItem(json['image']),
+      thumbnail: parseItem(json['thumbnail']),
+      log: parseItem(json['log']),
+      props: parseItem(json['props']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'article': article?.toJson(),
+      'icon': icon?.toJson(),
+      'image': image?.toJson(),
+      'thumbnail': thumbnail?.toJson(),
+      'log': log?.toJson(),
+      'props': props?.toJson(),
+    };
+  }
+}
+
+class BookmarkResourceItem {
+  String? src;
+  int? width;
+  int? height;
+
+  BookmarkResourceItem({
+    this.src,
+    this.width,
+    this.height,
+  });
+
+  factory BookmarkResourceItem.fromJson(Map<String, dynamic> json) {
+    return BookmarkResourceItem(
+      src: json['src'],
+      width: (json['width'] is int) ? (json['width'] as int) : null,
+      height: (json['height'] is int) ? (json['height'] as int) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'src': src,
+      'width': width,
+      'height': height,
+    };
   }
 }

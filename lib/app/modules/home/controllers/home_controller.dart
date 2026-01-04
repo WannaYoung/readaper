@@ -4,6 +4,7 @@ import '../controllers/sidebar_gesture_controller.dart';
 import '../providers/bookmark_provider.dart';
 import '../models/bookmark.dart';
 import '../models/bookmark_counts.dart';
+import '../models/home_layout_settings.dart';
 import '../widgets/add_bookmark_dialog.dart';
 import '../widgets/edit_bookmark_dialog.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,32 @@ class HomeController extends GetxController {
   final counts = const BookmarkCounts().obs;
 
   final RxBool _isAddBookmarkDialogOpen = false.obs;
+
+  // =========================
+  // 首页布局设置
+  // =========================
+
+  final homeLayoutSettings = HomeLayoutSettings().obs;
+  final tempHomeLayoutSettings = HomeLayoutSettings().obs;
+
+  Future<void> loadHomeLayoutSettings() async {
+    final loaded = await HomeLayoutSettings.load();
+    homeLayoutSettings.value = loaded;
+    tempHomeLayoutSettings.value = loaded.copy();
+  }
+
+  Future<void> saveHomeLayoutSettings() async {
+    homeLayoutSettings.value = tempHomeLayoutSettings.value.copy();
+    await homeLayoutSettings.value.save();
+  }
+
+  void applyTempHomeLayoutSettings() {
+    homeLayoutSettings.value = tempHomeLayoutSettings.value.copy();
+  }
+
+  void resetHomeLayoutSettings() {
+    tempHomeLayoutSettings.value = HomeLayoutSettings();
+  }
 
   /// 筛选 key => 请求参数映射（不包含分页/排序参数）
   static const Map<String, Map<String, dynamic>> _filterParamsMap = {
@@ -115,6 +142,8 @@ class HomeController extends GetxController {
     _sidebar = Get.find<SidebarGestureController>();
     _list = Get.find<HomeListController>();
 
+    loadHomeLayoutSettings();
+
     // 首次加载
     fetchArticles(refresh: true);
 
@@ -167,6 +196,37 @@ class HomeController extends GetxController {
         titleController.dispose();
       });
       _isAddBookmarkDialogOpen.value = false;
+    }
+  }
+
+  Future<void> markAsReadIfNeeded(Bookmark bookmark) async {
+    final id = bookmark.id ?? '';
+    if (id.isEmpty) return;
+
+    final isRead = bookmark.readProgress >= 100;
+    if (isRead) return;
+
+    const nextProgress = 100;
+
+    try {
+      await provider.updateBookmarkStatus(
+        id,
+        readProgress: nextProgress,
+      );
+
+      final newCounts = await _db.updateBookmarkAndGetCounts(
+        id,
+        readProgress: nextProgress,
+      );
+      counts.value = newCounts;
+
+      await _list.fetch(
+        refresh: true,
+        baseParams: buildFilterParams(),
+        showLoading: false,
+      );
+    } catch (e) {
+      _showError(e);
     }
   }
 

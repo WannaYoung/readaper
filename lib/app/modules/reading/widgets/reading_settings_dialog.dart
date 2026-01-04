@@ -69,74 +69,71 @@ class ReadingSettingsDialog extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(30, 8, 30, 24),
-      child: Obx(() => Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 顶部拖动条
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.dividerColor.withAlpha(140),
-                    borderRadius: BorderRadius.circular(2),
+      child: PopScope(
+        onPopInvoked: (_) {
+          controller.saveSettings(showToast: false);
+        },
+        child: Obx(() => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 顶部拖动条
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor.withAlpha(140),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              // 标题
-              Text(
-                'readingSettings'.tr,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: theme.textTheme.titleLarge?.color,
+                // 标题 + 重置
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'readingSettings'.tr,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: theme.textTheme.titleLarge?.color,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        controller.resetSettings();
+                        controller.applyTempSettings();
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.primary,
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(40, 30),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text('reset'.tr),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              for (final item in _buildItems())
-                _buildSettingItem(
-                  title: item.title,
-                  value: item.getValue(),
-                  min: item.min,
-                  max: item.max,
-                  step: item.step,
-                  onChanged: (value) {
-                    item.setValue(value);
-                    controller.applyTempSettings();
-                  },
-                ),
-              const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      controller.resetSettings();
+                const SizedBox(height: 24),
+                for (final item in _buildItems())
+                  _buildSettingItem(
+                    title: item.title,
+                    value: item.getValue(),
+                    min: item.min,
+                    max: item.max,
+                    step: item.step,
+                    onChanged: (value) {
+                      item.setValue(value);
                       controller.applyTempSettings();
                     },
-                    style: TextButton.styleFrom(
-                      foregroundColor: theme.colorScheme.primary,
-                    ),
-                    child: Text('reset'.tr),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      controller.saveSettings();
-                      Get.back();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: theme.colorScheme.onPrimary,
-                      elevation: 0,
-                    ),
-                    child: Text('save'.tr),
-                  ),
-                ],
-              ),
-            ],
-          )),
+                const SizedBox(height: 5),
+              ],
+            )),
+      ),
     );
   }
 

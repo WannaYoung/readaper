@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:readaper/app/routes/app_pages.dart';
 import 'package:readaper/app/shared/widgets/alert_dialog.dart';
-import 'package:share_plus/share_plus.dart';
 import '../controllers/home_controller.dart';
+import '../models/home_layout_settings.dart';
 import '../widgets/article_card.dart';
+import '../widgets/home_layout_dialog.dart';
 
 /// 首页
 ///
@@ -84,6 +86,29 @@ class HomeView extends GetView<HomeController> {
       iconTheme: theme.iconTheme,
       actions: [
         IconButton(
+          icon: Icon(Icons.dashboard_customize, color: theme.iconTheme.color),
+          onPressed: () {
+            controller.tempHomeLayoutSettings.value =
+                controller.homeLayoutSettings.value.copy();
+            Get.bottomSheet(
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Theme.of(Get.context!).scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(15),
+                    topRight: Radius.circular(15),
+                  ),
+                ),
+                child: HomeLayoutDialog(controller: controller),
+              ),
+              backgroundColor: Colors.transparent,
+              clipBehavior: Clip.antiAlias,
+              isScrollControlled: true,
+            );
+          },
+        ),
+        IconButton(
           icon: Icon(Icons.more_vert, color: theme.iconTheme.color),
           onPressed: () => Get.toNamed(Routes.SETTING),
         ),
@@ -97,46 +122,98 @@ class HomeView extends GetView<HomeController> {
       if (controller.loading.value && controller.articles.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
+
+      final settings = controller.homeLayoutSettings.value;
+      final isWaterfall =
+          settings.layoutType == HomeLayoutSettings.layoutTypeWaterfall;
+
       return RefreshIndicator(
         onRefresh: () => controller.fetchArticles(refresh: true),
-        child: ListView.separated(
-          controller: controller.scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(top: 8, bottom: 20),
-          itemCount: controller.articles.length + 1,
-          separatorBuilder: (_, __) => Divider(
-            color: Color.fromARGB(80, 180, 180, 180),
-            height: 1,
-            thickness: 0.8,
-            indent: 20,
-            endIndent: 20,
-          ),
-          itemBuilder: (context, index) {
-            if (index == controller.articles.length) {
-              if (controller.isLoadingMore.value) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: LoadingAnimationWidget.discreteCircle(
-                      color: const Color.fromARGB(255, 67, 67, 67),
-                      size: 30,
-                    ),
-                  ),
-                );
-              } else {
-                return const SizedBox.shrink();
-              }
-            }
-            final bookmark = controller.articles[index];
-            return ArticleCard(
-              bookmark: bookmark,
-              onTap: () => Get.toNamed(Routes.READING,
-                  arguments: {'bookmark': bookmark}),
-              onPieAction: (actionIndex) =>
-                  _onPieAction(actionIndex, bookmark, context),
-            );
-          },
-        ),
+        child: isWaterfall
+            ? MasonryGridView.count(
+                controller: controller.scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 20),
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                itemCount: controller.articles.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == controller.articles.length) {
+                    if (controller.isLoadingMore.value) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: LoadingAnimationWidget.discreteCircle(
+                            color: const Color.fromARGB(255, 67, 67, 67),
+                            size: 30,
+                          ),
+                        ),
+                      );
+                    } else {
+                      return const SizedBox.shrink();
+                    }
+                  }
+                  final bookmark = controller.articles[index];
+                  return ArticleGridCard(
+                    bookmark: bookmark,
+                    titleFontSize: settings.titleFontSize,
+                    showPreviewImage: settings.showPreviewImage,
+                    showSummary: settings.showSummary,
+                    onTap: () async {
+                      await controller.markAsReadIfNeeded(bookmark);
+                      Get.toNamed(Routes.READING,
+                          arguments: {'bookmark': bookmark});
+                    },
+                    onPieAction: (actionIndex) =>
+                        _onPieAction(actionIndex, bookmark, context),
+                  );
+                },
+              )
+            : ListView.separated(
+                controller: controller.scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(top: 8, bottom: 20),
+                itemCount: controller.articles.length + 1,
+                separatorBuilder: (_, __) => Divider(
+                  color: Color.fromARGB(80, 180, 180, 180),
+                  height: 1,
+                  thickness: 0.8,
+                  indent: 20,
+                  endIndent: 20,
+                ),
+                itemBuilder: (context, index) {
+                  if (index == controller.articles.length) {
+                    if (controller.isLoadingMore.value) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: LoadingAnimationWidget.discreteCircle(
+                            color: const Color.fromARGB(255, 67, 67, 67),
+                            size: 30,
+                          ),
+                        ),
+                      );
+                    } else {
+                      return const SizedBox.shrink();
+                    }
+                  }
+                  final bookmark = controller.articles[index];
+                  return ArticleListCard(
+                    bookmark: bookmark,
+                    titleFontSize: settings.titleFontSize,
+                    showPreviewImage: settings.showPreviewImage,
+                    showSummary: settings.showSummary,
+                    onTap: () async {
+                      await controller.markAsReadIfNeeded(bookmark);
+                      Get.toNamed(Routes.READING,
+                          arguments: {'bookmark': bookmark});
+                    },
+                    onPieAction: (actionIndex) =>
+                        _onPieAction(actionIndex, bookmark, context),
+                  );
+                },
+              ),
       );
     });
   }
@@ -157,14 +234,6 @@ class HomeView extends GetView<HomeController> {
         controller.archiveBookmark(bookmark, !bookmark.isArchived);
         break;
       case 4:
-        final title = (bookmark.title ?? '').trim();
-        final url = (bookmark.url ?? '').trim();
-        if (url.isEmpty) return;
-
-        final text = title.isEmpty ? url : '$title\n$url';
-        Share.share(text);
-        break;
-      case 5:
         _showDeleteConfirmDialog(context, bookmark);
         break;
     }
