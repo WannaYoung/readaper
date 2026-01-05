@@ -1,0 +1,18 @@
+# import_sorter 配置
+# 仅用于开发期自动整理 import。
+
+# 只处理 lib 目录
+imports:
+  - lib/**
+
+# 允许将 flutter 的 package import 归类为三方库
+#（import_sorter 默认会做分组：dart / package / relative）
+
+dart:
+  # 将 dart:xxx 视为系统库
+  enabled: true
+
+# 排除自动生成文件（如有）
+exclude:
+  - '**/*.g.dart'
+  - '**/*.freezed.dart'

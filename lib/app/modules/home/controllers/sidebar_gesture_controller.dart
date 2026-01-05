@@ -1,3 +1,4 @@
+// Package imports:
 import 'package:get/get.dart';
 
 /// 侧边栏手势控制器

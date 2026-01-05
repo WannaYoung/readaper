@@ -1,21 +1,24 @@
-import 'package:get/get.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:get/get.dart';
+
+// Project imports:
 import 'package:readaper/app/config/env.dart';
+import 'package:readaper/app/modules/login/services/auth_storage_service.dart';
 import 'package:readaper/app/routes/app_pages.dart';
-import 'package:readaper/app/services/auth_storage_service.dart';
-import '../providers/auth_provider.dart';
 import '../../../network/api_client.dart';
-import 'package:get_storage/get_storage.dart';
+import '../repositories/auth_repository.dart';
 
 class LoginController extends GetxController {
-  final AuthProvider provider;
-  LoginController(this.provider);
+  final AuthRepository repository;
+  LoginController(this.repository);
 
   final serverController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  final box = GetStorage();
-  final AuthStorageService _authStorage = AuthStorageService();
+  final AuthStorageService _authStorage = Get.find<AuthStorageService>();
 
   @override
   void onInit() {
@@ -36,37 +39,27 @@ class LoginController extends GetxController {
   /// - 会将服务器地址写入本地存储
   /// - 登录成功后写入 token，并跳转到首页
   void login() async {
-    final server = ApiClient.normalizeBaseUrl(serverController.text);
-    final username = usernameController.text.trim();
-    final password = passwordController.text;
-    if (server.isEmpty || username.isEmpty || password.isEmpty) {
-      Get.snackbar('error'.tr, 'fillAllFields'.tr);
-      return;
-    }
-    // 先写入 server，确保登录请求使用正确服务器
-    _authStorage.saveServer(server);
     try {
-      final res = await provider.login(
+      final username = usernameController.text.trim();
+      final password = passwordController.text;
+      final server = ApiClient.normalizeBaseUrl(serverController.text);
+
+      final error = await repository.login(
+        server: server,
         username: username,
         password: password,
       );
-      if (res != null && res['token'] != null && res['id'] != null) {
-        box.write('token', res['token']);
-        box.write('id', res['id']);
-        // 登录成功后保存用户名，方便退出后自动填充
-        _authStorage.saveUsername(username);
+
+      if (error == null) {
         // 登录成功后清空密码，避免返回登录页时残留
         passwordController.clear();
         Get.offAllNamed(Routes.HOME);
-      } else {
-        final message = res is Map<String, dynamic>
-            ? (res['message'] ??
-                res['error'] ??
-                res['detail'] ??
-                'invalidResponse'.tr)
-            : 'invalidResponse'.tr;
-        Get.snackbar('loginFailed'.tr, message.toString());
+        return;
       }
+
+      final knownKeys = <String>{'fillAllFields', 'invalidResponse'};
+      final message = knownKeys.contains(error) ? error.tr : error;
+      Get.snackbar('loginFailed'.tr, message);
     } on ApiException catch (e) {
       Get.snackbar('loginFailed'.tr, e.message);
     } catch (e) {

@@ -1,9 +1,14 @@
+// Dart imports:
 import 'dart:async';
 
+// Package imports:
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-import '../modules/home/providers/bookmark_provider.dart';
+// Project imports:
+import '../providers/bookmark_provider.dart';
 import 'bookmark_db_service.dart';
+import '../../login/services/auth_storage_service.dart';
 
 /// 书签同步服务（前台定时）
 ///
@@ -21,15 +26,53 @@ class BookmarkSyncService {
   static const String _keyNextSyncAtMs = 'sync_next_at_ms';
 
   final GetStorage _box = GetStorage();
-  final BookmarkProvider _provider = BookmarkProvider();
-  final BookmarkDbService _db = BookmarkDbService();
+  BookmarkProvider? _provider;
+  BookmarkDbService? _db;
 
   Timer? _timer;
   bool _running = false;
 
   /// 初始化（建议在 main() 调用）
   void init() {
+    // 未登录不初始化，避免未登录阶段创建网络相关对象
+    if (!_hasToken()) {
+      _timer?.cancel();
+      _timer = null;
+      _box.write(_keyNextSyncAtMs, null);
+      return;
+    }
+
+    _provider = _resolveProvider();
+    _db = _resolveDb();
     _restartTimerIfNeeded();
+  }
+
+  bool _hasToken() {
+    try {
+      if (Get.isRegistered<AuthStorageService>()) {
+        return Get.find<AuthStorageService>().hasToken;
+      }
+    } catch (_) {}
+    final token = (GetStorage().read('token') ?? '').toString().trim();
+    return token.isNotEmpty;
+  }
+
+  BookmarkProvider _resolveProvider() {
+    try {
+      if (Get.isRegistered<BookmarkProvider>()) {
+        return Get.find<BookmarkProvider>();
+      }
+    } catch (_) {}
+    return BookmarkProvider();
+  }
+
+  BookmarkDbService _resolveDb() {
+    try {
+      if (Get.isRegistered<BookmarkDbService>()) {
+        return Get.find<BookmarkDbService>();
+      }
+    } catch (_) {}
+    return BookmarkDbService();
   }
 
   bool get autoSyncEnabled => _box.read(_keyAutoSyncEnabled) == true;
@@ -69,6 +112,7 @@ class BookmarkSyncService {
 
   /// 立即执行一次全量同步
   Future<void> syncNow() async {
+    if (!_hasToken()) return;
     if (_running) return;
     _running = true;
     try {
@@ -82,6 +126,8 @@ class BookmarkSyncService {
 
   /// 执行全量同步：分页拉取并写入本地数据库
   Future<void> _performFullSync() async {
+    final provider = _provider ?? _resolveProvider();
+    final db = _db ?? _resolveDb();
     const int limit = 50;
     int offset = 0;
     while (true) {
@@ -90,9 +136,9 @@ class BookmarkSyncService {
         'offset': offset,
         'sort': '-created',
       };
-      final list = await _provider.getBookmarksWithParams(params);
+      final list = await provider.getBookmarksWithParams(params);
       if (list.isEmpty) break;
-      await _db.upsertBookmarks(list);
+      await db.upsertBookmarks(list);
       offset += limit;
       if (list.length < limit) break;
     }

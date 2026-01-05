@@ -1,8 +1,13 @@
+// Dart imports:
 import 'dart:async';
 
+// Flutter imports:
 import 'package:flutter/widgets.dart';
+
+// Package imports:
 import 'package:get/get.dart';
 
+// Project imports:
 import '../modules/home/controllers/home_controller.dart';
 import 'share_intent_service.dart';
 

@@ -1,7 +1,15 @@
-import 'api_debug.dart';
-import 'package:dio/dio.dart';
+// Flutter imports:
 import 'package:flutter/foundation.dart';
+
+// Package imports:
+import 'package:dio/dio.dart';
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+
+// Project imports:
+import '../config/env.dart';
+import '../modules/login/services/auth_storage_service.dart';
+import 'api_debug.dart';
 
 /// 统一的网络异常
 ///
@@ -86,11 +94,21 @@ class ApiClient {
   }
 
   static String _resolveBaseUrl() {
+    try {
+      if (Get.isRegistered<AuthStorageService>()) {
+        final server = Get.find<AuthStorageService>().server;
+        if (server.trim().isNotEmpty) {
+          return normalizeBaseUrl(server);
+        }
+      }
+    } catch (_) {}
+
     final server = GetStorage().read('server');
     if (server is String && server.trim().isNotEmpty) {
       return normalizeBaseUrl(server);
     }
-    return 'https://wyread.tocmcc.cn';
+
+    return env.host;
   }
 
   /// 从 DioException 中提取可展示给用户的错误信息
@@ -130,8 +148,18 @@ class ApiClient {
       onRequest: (options, handler) {
         options.baseUrl = _resolveBaseUrl();
         options.headers.putIfAbsent('Accept', () => 'application/json');
-        final token = GetStorage().read('token');
-        if (token != null) {
+
+        String token = '';
+        try {
+          if (Get.isRegistered<AuthStorageService>()) {
+            token = Get.find<AuthStorageService>().token;
+          }
+        } catch (_) {}
+        token = token.isNotEmpty
+            ? token
+            : (GetStorage().read('token') ?? '').toString();
+        token = token.trim();
+        if (token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         return handler.next(options);

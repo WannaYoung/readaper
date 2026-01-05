@@ -1,12 +1,17 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
+// Package imports:
 import 'package:extended_image/extended_image.dart';
+import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+
+// Project imports:
+import 'package:readaper/app/modules/reading/controllers/reading_controller.dart';
 import 'package:readaper/app/modules/reading/widgets/image_preview.dart';
 import 'package:readaper/app/services/browser_service.dart';
-import 'package:readaper/app/modules/reading/controllers/reading_controller.dart';
-import '../modules/reading/models/reading_settings.dart';
+import '../models/reading_settings.dart';
 
 /// Markdown 渲染配置服务
 ///

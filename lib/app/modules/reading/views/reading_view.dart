@@ -1,10 +1,15 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:markdown_widget/markdown_widget.dart';
-import 'package:readaper/app/services/markdown_service.dart';
-import 'package:readaper/app/modules/reading/widgets/reading_settings_dialog.dart';
+
+// Project imports:
+import 'package:readaper/app/modules/reading/services/markdown_service.dart';
 import 'package:readaper/app/modules/reading/widgets/reading_appbar_popup.dart';
+import 'package:readaper/app/modules/reading/widgets/reading_settings_dialog.dart';
 import '../controllers/reading_controller.dart';
 
 /// 阅读页

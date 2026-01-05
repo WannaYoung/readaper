@@ -1,14 +1,19 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
+
+// Project imports:
+import 'package:readaper/app/modules/bookmark/bookmark.dart';
 import 'package:readaper/app/routes/app_pages.dart';
 import 'package:readaper/app/shared/widgets/alert_dialog.dart';
-import '../providers/setting_provider.dart';
-import '../models/user_profile.dart';
+import '../../../network/api_client.dart';
 import '../../../services/localization_service.dart';
 import '../../../services/theme_service.dart';
-import '../../../network/api_client.dart';
-import '../../../services/bookmark_sync_service.dart';
+import '../../login/services/auth_storage_service.dart';
+import '../models/user_profile.dart';
+import '../providers/setting_provider.dart';
 
 /// 设置页控制器
 ///
@@ -28,8 +33,10 @@ class SettingController extends GetxController {
   final selectedLanguageIndex = 0.obs;
   final userProfile = Rxn<UserProfile>();
   final SettingProvider provider = SettingProvider();
-  final LocalizationService localizationService = LocalizationService();
-  final ThemeService themeService = ThemeService();
+  final LocalizationService localizationService =
+      Get.find<LocalizationService>();
+  final ThemeService themeService = Get.find<ThemeService>();
+  final AuthStorageService _authStorage = Get.find<AuthStorageService>();
 
   // 同步设置
   static const syncTimeframeMinutes =
@@ -171,11 +178,8 @@ class SettingController extends GetxController {
         confirmButtonText: 'exit'.tr,
         confirmButtonColor: const Color.fromARGB(255, 239, 72, 60),
         onConfirm: () {
-          final box = GetStorage();
-          if (box.hasData('token')) {
-            box.remove('token');
-            Get.offAllNamed(Routes.LOGIN);
-          }
+          _authStorage.clearAuth();
+          Get.offAllNamed(Routes.LOGIN);
         },
       ),
     );

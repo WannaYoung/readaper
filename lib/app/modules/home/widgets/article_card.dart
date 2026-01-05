@@ -1,9 +1,14 @@
-import 'package:extended_image/extended_image.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:extended_image/extended_image.dart';
 import 'package:get/get.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:pie_menu/pie_menu.dart';
-import '../models/bookmark.dart';
+
+// Project imports:
+import 'package:readaper/app/modules/bookmark/bookmark.dart';
 
 class _ArticlePieMenuThemes {
   /// 默认样式

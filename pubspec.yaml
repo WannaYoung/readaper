@@ -16,16 +16,17 @@ dependencies:
     
   get: ^4.7.2
   dio: ^5.4.3
+  http: ^1.2.2
   path: ^1.9.0
   pie_menu: ^3.3.3
   sqflite: ^2.3.3+1
   get_storage: ^2.1.1
   share_plus: ^10.0.2
+  path_provider: ^2.1.4
   extended_image: ^8.2.1
   webview_flutter: ^4.7.0
   haptic_feedback: ^0.6.4
   markdown_widget: ^2.3.2+8
-  easy_localization: ^3.0.3
   flex_color_scheme: ^7.3.1
   flutter_easyloading: ^3.0.5
   receive_sharing_intent: ^1.8.1
@@ -35,6 +36,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  import_sorter: ^4.6.0
   flutter_lints: ^5.0.0
 
 flutter:

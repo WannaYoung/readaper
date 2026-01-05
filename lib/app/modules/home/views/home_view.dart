@@ -1,8 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
+// Package imports:
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:pie_menu/pie_menu.dart';
+
+// Project imports:
 import 'package:readaper/app/routes/app_pages.dart';
 import 'package:readaper/app/shared/widgets/alert_dialog.dart';
 import '../controllers/home_controller.dart';
@@ -32,7 +37,7 @@ class HomeView extends GetView<HomeController> {
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: _buildAppBar(theme),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => controller.showAddBookmarkDialog(),
+          onPressed: () => controller.openAddBookmarkDialog(),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: theme.colorScheme.onPrimary,
           shape: const CircleBorder(),

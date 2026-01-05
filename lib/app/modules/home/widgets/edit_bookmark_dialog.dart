@@ -1,5 +1,38 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:get/get.dart';
+
+Future<String?> showEditBookmarkTitleDialog(
+  BuildContext context, {
+  required String initialTitle,
+}) async {
+  final titleController = TextEditingController(text: initialTitle);
+  try {
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return EditBookmarkDialog(
+          titleController: titleController,
+          onConfirm: () async {
+            final title = titleController.text.trim();
+            if (title.isEmpty) {
+              Get.snackbar('failed'.tr, 'fillAllFields'.tr);
+              return;
+            }
+            Navigator.of(dialogContext).pop(title);
+          },
+        );
+      },
+    );
+  } finally {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      titleController.dispose();
+    });
+  }
+}
 
 class EditBookmarkDialog extends StatelessWidget {
   final TextEditingController titleController;

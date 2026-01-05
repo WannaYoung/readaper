@@ -1,6 +1,9 @@
+// Package imports:
+import 'package:dio/dio.dart';
+
+// Project imports:
 import '../../../network/api_client.dart';
 import '../models/bookmark.dart';
-import 'package:dio/dio.dart';
 
 /// 书签相关接口
 class BookmarkProvider {

@@ -1,43 +1,35 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+
+// Project imports:
 import 'package:readaper/app/services/translations.dart';
+import 'app/modules/login/services/auth_storage_service.dart';
 import 'app/routes/app_pages.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'app/services/app_initializer.dart';
 import 'app/services/localization_service.dart';
 import 'app/services/theme_service.dart';
-import 'app/services/bookmark_sync_service.dart';
-import 'app/services/share_intent_service.dart';
-import 'app/services/app_lifecycle_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init();
-  final box = GetStorage();
-  final hasToken = box.read('token') != null;
+  await AppInitializer.init();
 
-  // 初始化本地化服务
-  final localizationService = LocalizationService();
-  final themeService = ThemeService();
-
-  // 初始化书签同步服务（前台定时）
-  BookmarkSyncService().init();
-
-  // 初始化分享接收服务（从其它 App 分享链接到本 App）
-  Get.put(ShareIntentService()).init();
-
-  // 初始化生命周期监听（App 进入前台时处理分享/剪贴板）
-  Get.put(AppLifecycleService()).init();
+  final localizationService = Get.find<LocalizationService>();
+  final themeService = Get.find<ThemeService>();
+  final authStorage = Get.find<AuthStorageService>();
 
   runApp(GetMaterialApp(
     title: "Readaper",
     getPages: AppPages.routes,
     builder: combineBuilder,
     debugShowCheckedModeBanner: false,
-    initialRoute: hasToken ? Routes.HOME : Routes.LOGIN,
+    initialRoute: authStorage.hasToken ? Routes.HOME : Routes.LOGIN,
     theme: themeService.currentTheme,
     translations: AppTranslations(),
     locale: localizationService.getCurrentLocale(),

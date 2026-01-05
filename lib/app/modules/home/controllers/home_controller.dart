@@ -1,32 +1,38 @@
-import 'package:get/get.dart';
-import 'home_list_controller.dart';
-import '../controllers/sidebar_gesture_controller.dart';
-import '../providers/bookmark_provider.dart';
-import '../models/bookmark.dart';
-import '../models/bookmark_counts.dart';
-import '../models/home_layout_settings.dart';
-import '../widgets/add_bookmark_dialog.dart';
-import '../widgets/edit_bookmark_dialog.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+
+// Package imports:
+import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import '../../../network/api_client.dart';
-import '../../../services/bookmark_db_service.dart';
-import '../../../services/bookmark_sync_service.dart';
+
+// Project imports:
+import 'package:readaper/app/modules/bookmark/bookmark.dart';
 import '../../../services/share_intent_service.dart';
+import '../../login/services/auth_storage_service.dart';
+import '../constants/home_constants.dart';
+import '../models/home_layout_settings.dart';
+import '../services/services.dart';
+import 'home_list_controller.dart';
 
 /// 首页控制器
 ///
 /// - 作为首页编排器：协调列表分页、侧边栏筛选、侧边栏手势、本地统计与同步
 class HomeController extends GetxController {
   final BookmarkProvider provider;
-  HomeController(this.provider);
+  final BookmarkRepository repository;
+  HomeController(this.provider, [BookmarkRepository? repository])
+      : repository = repository ?? Get.find<BookmarkRepository>();
+  final AuthStorageService _authStorage = Get.find<AuthStorageService>();
 
-  final BookmarkDbService _db = BookmarkDbService();
-
-  late final SidebarGestureController _sidebar;
   late final HomeListController _list;
+
+  late final HomeDialogsService _dialogs;
+  late final HomeActionsService _actions;
+
+  late final HomeLayoutService _layout;
+  late final HomeSidebarService _sidebarService;
+  late final HomeErrorHandler _error;
 
   /// 当前侧边栏选中项 key（用于顶部标题显示/筛选，如 all/archive/video）
   final currentSidebarKey = 'all'.obs;
@@ -36,70 +42,69 @@ class HomeController extends GetxController {
 
   final RxBool _isAddBookmarkDialogOpen = false.obs;
 
-  // =========================
-  // 首页布局设置
-  // =========================
+  /// 当前生效的首页布局设置
+  Rx<HomeLayoutSettings> get homeLayoutSettings => _layout.homeLayoutSettings;
 
-  final homeLayoutSettings = HomeLayoutSettings().obs;
-  final tempHomeLayoutSettings = HomeLayoutSettings().obs;
+  /// 临时首页布局设置（用于弹窗实时预览）
+  Rx<HomeLayoutSettings> get tempHomeLayoutSettings =>
+      _layout.tempHomeLayoutSettings;
 
+  /// 加载首页布局设置
   Future<void> loadHomeLayoutSettings() async {
-    final loaded = await HomeLayoutSettings.load();
-    homeLayoutSettings.value = loaded;
-    tempHomeLayoutSettings.value = loaded.copy();
+    await _layout.load();
   }
 
+  /// 保存首页布局设置
   Future<void> saveHomeLayoutSettings() async {
-    homeLayoutSettings.value = tempHomeLayoutSettings.value.copy();
-    await homeLayoutSettings.value.save();
+    await _layout.save();
   }
 
+  /// 应用临时布局设置（用于实时预览）
   void applyTempHomeLayoutSettings() {
-    homeLayoutSettings.value = tempHomeLayoutSettings.value.copy();
+    _layout.applyTemp();
   }
 
+  /// 重置临时布局设置为默认值
   void resetHomeLayoutSettings() {
-    tempHomeLayoutSettings.value = HomeLayoutSettings();
+    _layout.resetTemp();
   }
-
-  /// 筛选 key => 请求参数映射（不包含分页/排序参数）
-  static const Map<String, Map<String, dynamic>> _filterParamsMap = {
-    'all': {},
-    'unread': {
-      'read_status': ['unread']
-    },
-    'archive': {'is_archived': true},
-    'favorite': {'is_marked': true},
-    'video': {
-      'type': ['video']
-    },
-  };
 
   /// 当前筛选参数（不包含分页/排序参数）
   Map<String, dynamic> buildFilterParams() {
-    return _filterParamsMap[currentSidebarKey.value] ?? const {};
+    return HomeConstants.filterParamsMap[currentSidebarKey.value] ?? const {};
   }
 
-  // =========================
-  // 对外暴露（给 View 使用）
-  // =========================
+  /// 对外暴露（给 View 使用）
 
-  RxDouble get sidebarOpenRatio => _sidebar.openRatio;
-  RxBool get isSidebarDragging => _sidebar.isDragging;
-  bool get isSidebarOpen => _sidebar.isOpen;
+  /// 侧边栏打开比例（0=关闭，1=打开）
+  RxDouble get sidebarOpenRatio => _sidebarService.openRatio;
 
-  void openSidebar() => _sidebar.open();
-  void closeSidebar() => _sidebar.close();
-  void toggleSidebar() => _sidebar.toggle();
-  void onSidebarHorizontalDragStart() => _sidebar.onHorizontalDragStart();
+  /// 是否正在拖拽侧边栏
+  RxBool get isSidebarDragging => _sidebarService.isDragging;
+
+  /// 侧边栏是否处于打开状态
+  bool get isSidebarOpen => _sidebarService.isOpen;
+
+  /// 打开侧边栏
+  void openSidebar() => _sidebarService.open();
+
+  /// 关闭侧边栏
+  void closeSidebar() => _sidebarService.close();
+
+  /// 切换侧边栏开关
+  void toggleSidebar() => _sidebarService.toggle();
+
+  /// 侧边栏手势开始
+  void onSidebarHorizontalDragStart() =>
+      _sidebarService.onHorizontalDragStart();
   void onSidebarHorizontalDragUpdate({
     required double deltaDx,
     required double sidebarWidth,
   }) =>
-      _sidebar.onHorizontalDragUpdate(
+      _sidebarService.onHorizontalDragUpdate(
           deltaDx: deltaDx, sidebarWidth: sidebarWidth);
   void onSidebarHorizontalDragEnd({required double velocityDx}) =>
-      _sidebar.onHorizontalDragEnd(velocityDx: velocityDx);
+      _sidebarService.onHorizontalDragEnd(velocityDx: velocityDx);
 
   RxList<Bookmark> get articles => _list.items;
   RxBool get loading => _list.loading;
@@ -119,28 +124,46 @@ class HomeController extends GetxController {
     return map[key] ?? 0;
   }
 
-  void _showError(Object e) {
-    if (e is ApiException) {
-      Get.snackbar('failed'.tr, e.message);
-      return;
-    }
-    Get.snackbar('failed'.tr, e.toString());
+  /// 统一异常捕获包装
+  Future<T?> _guard<T>(
+    Future<T> Function() action, {
+    void Function(Object e)? onError,
+    Future<void> Function()? onFinally,
+  }) {
+    return _error.guard(
+      action,
+      onError: onError,
+      onFinally: onFinally,
+    );
   }
 
-  final sidebarItems = [
-    {'icon': Icons.all_inbox, 'title': 'all'},
-    {'icon': Icons.mark_unread_chat_alt_outlined, 'title': 'unread'},
-    {'icon': Icons.archive_outlined, 'title': 'archive'},
-    {'icon': Icons.favorite_border, 'title': 'favorite'},
-    {'icon': Icons.video_library_outlined, 'title': 'video'},
-  ];
+  /// 侧边栏菜单项
+  final sidebarItems = HomeConstants.sidebarItems;
+
+  /// 将侧边栏选中项切回 all
+  void _setSidebarAll() {
+    currentSidebarKey.value = 'all';
+  }
 
   @override
   void onInit() {
     super.onInit();
 
-    _sidebar = Get.find<SidebarGestureController>();
     _list = Get.find<HomeListController>();
+
+    _dialogs = Get.find<HomeDialogsService>();
+
+    // 下沉服务
+    _layout = Get.find<HomeLayoutService>();
+    _sidebarService = Get.find<HomeSidebarService>();
+    _error = Get.find<HomeErrorHandler>();
+    _actions = HomeActionsService(
+      list: _list,
+      repository: repository,
+      currentSidebarKey: currentSidebarKey,
+      counts: counts,
+      refreshCounts: refreshCounts,
+    );
 
     loadHomeLayoutSettings();
 
@@ -160,96 +183,60 @@ class HomeController extends GetxController {
     });
   }
 
-  Future<void> showAddBookmarkDialog({String? initialUrl}) async {
+  /// 打开“新增书签”弹窗（可传入初始 URL）
+  Future<void> openAddBookmarkDialog({String? initialUrl}) async {
     final context = Get.context;
     if (context == null) return;
-
     if (_isAddBookmarkDialogOpen.value) return;
     _isAddBookmarkDialogOpen.value = true;
 
-    final urlController = TextEditingController(text: initialUrl ?? '');
-    final titleController = TextEditingController();
-
     try {
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          return AddBookmarkDialog(
-            urlController: urlController,
-            titleController: titleController,
-            onConfirm: () async {
-              final ok = await addBookmark(
-                url: urlController.text,
-                title: titleController.text,
-              );
-              if (ok && dialogContext.mounted) {
-                Navigator.of(dialogContext).pop();
-              }
-            },
-          );
-        },
+      final result = await _dialogs.openAddBookmarkDialog(
+        context,
+        initialUrl: initialUrl,
+      );
+      if (result == null) return;
+
+      await addBookmark(
+        url: result.url,
+        title: result.title.isEmpty ? null : result.title,
       );
     } finally {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        urlController.dispose();
-        titleController.dispose();
-      });
       _isAddBookmarkDialogOpen.value = false;
     }
   }
 
+  /// 若当前项未读，则标记为已读
   Future<void> markAsReadIfNeeded(Bookmark bookmark) async {
-    final id = bookmark.id ?? '';
-    if (id.isEmpty) return;
-
-    final isRead = bookmark.readProgress >= 100;
-    if (isRead) return;
-
-    const nextProgress = 100;
-
-    try {
-      await provider.updateBookmarkStatus(
-        id,
-        readProgress: nextProgress,
+    await _guard(() async {
+      await _actions.markAsReadIfNeeded(
+        bookmark: bookmark,
+        filterParams: buildFilterParams(),
       );
-
-      final newCounts = await _db.updateBookmarkAndGetCounts(
-        id,
-        readProgress: nextProgress,
-      );
-      counts.value = newCounts;
-
-      await _list.fetch(
-        refresh: true,
-        baseParams: buildFilterParams(),
-        showLoading: false,
-      );
-    } catch (e) {
-      _showError(e);
-    }
+    });
   }
 
+  /// 若剪贴板存在 URL，则引导打开“新增书签”弹窗
   Future<void> consumeClipboardUrlIfAny() async {
     final box = GetStorage();
-    final hasToken = box.read('token') != null;
-    if (!hasToken) return;
+    if (!_authStorage.hasToken) return;
 
     if (_isAddBookmarkDialogOpen.value) return;
 
-    try {
-      final data = await Clipboard.getData('text/plain');
-      final url = _extractFirstUrl(data?.text);
-      if (url == null) return;
+    await _guard(
+      () async {
+        final data = await Clipboard.getData('text/plain');
+        final url = _extractFirstUrl(data?.text);
+        if (url == null) return;
 
-      final lastUrl = box.read('last_clipboard_url');
-      if (lastUrl == url) return;
+        final lastUrl = box.read('last_clipboard_url');
+        if (lastUrl == url) return;
 
-      box.write('last_clipboard_url', url);
-      await showAddBookmarkDialog(initialUrl: url);
-    } catch (_) {
-      return;
-    }
+        box.write('last_clipboard_url', url);
+        await openAddBookmarkDialog(initialUrl: url);
+      },
+      onError: (_) {},
+    );
   }
 
   String? _extractFirstUrl(String? text) {
@@ -266,11 +253,12 @@ class HomeController extends GetxController {
 
   /// 刷新侧边栏分类数量
   Future<void> refreshCounts() async {
-    try {
-      counts.value = await _db.getCounts();
-    } catch (_) {
-      // 统计失败时不影响主流程
-    }
+    await _guard(
+      () async {
+        counts.value = await repository.getCounts();
+      },
+      onError: (_) {},
+    );
   }
 
   /// 获取书签列表
@@ -278,175 +266,70 @@ class HomeController extends GetxController {
   /// - refresh=true：下拉刷新，重置 offset
   /// - refresh=false：分页加载更多
   Future<void> fetchArticles({bool refresh = false}) async {
-    try {
-      if (refresh) {
-        await _list.refreshList(baseParams: buildFilterParams());
-      } else {
-        await _list.fetch(refresh: false, baseParams: buildFilterParams());
-      }
-      await refreshCounts();
-    } catch (_) {
-      // 交由各子 controller 处理错误提示
-    }
+    await _guard(
+      () async {
+        if (refresh) {
+          await _list.refreshList(baseParams: buildFilterParams());
+        } else {
+          await _list.fetch(refresh: false, baseParams: buildFilterParams());
+        }
+        await refreshCounts();
+      },
+      onError: (_) {},
+    );
   }
 
+  /// 打开“编辑标题”弹窗并提交更新
   Future<void> editBookmarkTitle(Bookmark bookmark) async {
     final context = Get.context;
     if (context == null) return;
     final id = bookmark.id ?? '';
     if (id.isEmpty) return;
 
-    final titleController =
-        TextEditingController(text: (bookmark.title ?? '').trim());
+    final newTitle = await _dialogs.openEditTitleDialog(
+      context,
+      initialTitle: (bookmark.title ?? '').trim(),
+    );
+    if (newTitle == null) return;
 
-    try {
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          return EditBookmarkDialog(
-            titleController: titleController,
-            onConfirm: () async {
-              final newTitle = titleController.text.trim();
-              if (newTitle.isEmpty) {
-                Get.snackbar('failed'.tr, 'fillAllFields'.tr);
-                return;
-              }
-
-              try {
-                EasyLoading.show();
-                await provider.updateBookmarkStatus(
-                  id,
-                  title: newTitle,
-                );
-                EasyLoading.dismiss();
-
-                Navigator.of(dialogContext).pop();
-                await _list.fetch(
-                  refresh: true,
-                  baseParams: buildFilterParams(),
-                  showLoading: false,
-                );
-                await refreshCounts();
-                Get.snackbar('success'.tr, 'success'.tr);
-              } catch (e) {
-                EasyLoading.dismiss();
-                _showError(e);
-              }
-            },
-          );
-        },
+    await _guard(() async {
+      await _actions.updateTitle(
+        id: id,
+        title: newTitle,
+        filterParams: buildFilterParams(),
       );
-    } finally {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        titleController.dispose();
-      });
-    }
+    });
   }
 
+  /// 切换已读/未读
   Future<void> toggleReadStatus(Bookmark bookmark) async {
-    final id = bookmark.id ?? '';
-    if (id.isEmpty) return;
-
-    final isRead = bookmark.readProgress >= 100;
-    final nextProgress = isRead ? 0 : 100;
-
-    try {
-      await provider.updateBookmarkStatus(
-        id,
-        readProgress: nextProgress,
+    await _guard(() async {
+      await _actions.toggleReadStatus(
+        bookmark: bookmark,
+        filterParams: buildFilterParams(),
       );
-
-      final newCounts = await _db.updateBookmarkAndGetCounts(
-        id,
-        readProgress: nextProgress,
-      );
-      counts.value = newCounts;
-
-      await _list.fetch(
-        refresh: true,
-        baseParams: buildFilterParams(),
-        showLoading: false,
-      );
-      Get.snackbar('success'.tr, 'success'.tr);
-    } catch (e) {
-      _showError(e);
-    }
+    });
   }
 
+  /// 收藏/取消收藏
   Future<void> markBookmark(Bookmark bookmark, bool value) async {
-    try {
-      await provider.updateBookmarkStatus(bookmark.id ?? '', isMarked: value);
-
-      // 如果在收藏列表中取消收藏，直接移除
-      if (currentSidebarKey.value == 'favorite' && !value) {
-        _list.items.removeWhere((b) => b.id == bookmark.id);
-      } else {
-        // 否则更新状态
-        final index = _list.items.indexWhere((b) => b.id == bookmark.id);
-        if (index != -1) {
-          _list.items[index] = _list.items[index].copyWith(isMarked: value);
-        }
-      }
-      _list.items.refresh();
-      Get.snackbar('success'.tr, value ? 'favorited'.tr : 'unfavorited'.tr);
-
-      final id = bookmark.id;
-      if (id != null && id.isNotEmpty) {
-        final newCounts =
-            await _db.updateBookmarkAndGetCounts(id, isMarked: value);
-        counts.value = newCounts;
-      }
-    } catch (e) {
-      _showError(e);
-    }
+    await _guard(() async {
+      await _actions.markBookmark(bookmark: bookmark, value: value);
+    });
   }
 
   /// 归档/取消归档
   Future<void> archiveBookmark(Bookmark bookmark, bool value) async {
-    try {
-      await provider.updateBookmarkStatus(bookmark.id ?? '', isArchived: value);
-
-      // 如果在归档列表中取消归档，直接移除
-      if (currentSidebarKey.value == 'archive' && !value) {
-        _list.items.removeWhere((b) => b.id == bookmark.id);
-      } else {
-        // 否则更新状态
-        final index = _list.items.indexWhere((b) => b.id == bookmark.id);
-        if (index != -1) {
-          _list.items[index] = _list.items[index].copyWith(isArchived: value);
-        }
-      }
-      _list.items.refresh();
-      Get.snackbar('success'.tr, value ? 'archived'.tr : 'unarchived'.tr);
-
-      final id = bookmark.id;
-      if (id != null && id.isNotEmpty) {
-        final newCounts =
-            await _db.updateBookmarkAndGetCounts(id, isArchived: value);
-        counts.value = newCounts;
-      }
-    } catch (e) {
-      _showError(e);
-    }
+    await _guard(() async {
+      await _actions.archiveBookmark(bookmark: bookmark, value: value);
+    });
   }
 
   /// 删除书签
   Future<void> deleteBookmark(Bookmark bookmark) async {
-    try {
-      await provider.deleteBookmark(bookmark.id ?? '');
-      _list.items.removeWhere((b) => b.id == bookmark.id);
-      _list.items.refresh();
-      Get.snackbar('success'.tr, 'deleted'.tr);
-
-      final id = bookmark.id;
-      if (id != null && id.isNotEmpty) {
-        final newCounts = await _db.deleteBookmarkAndGetCounts(id);
-        counts.value = newCounts;
-      }
-    } catch (e) {
-      _showError(e);
-    }
+    await _guard(() async {
+      await _actions.deleteBookmark(bookmark: bookmark);
+    });
   }
 
   /// 加载下一页
@@ -461,43 +344,19 @@ class HomeController extends GetxController {
     fetchArticles(refresh: true);
   }
 
+  /// 新增书签
   Future<bool> addBookmark({
     required String url,
     String? title,
   }) async {
-    final trimmedUrl = url.trim();
-    if (trimmedUrl.isEmpty) {
-      Get.snackbar('failed'.tr, 'fillAllFields'.tr);
-      return false;
-    }
-
-    try {
-      EasyLoading.show();
-      await provider.addBookmark(
-        url: trimmedUrl,
+    final ok = await _guard<bool>(() async {
+      return await _actions.addBookmark(
+        url: url,
         title: title,
-        created: DateTime.now().toUtc(),
+        filterParams: buildFilterParams(),
+        setSidebarAll: _setSidebarAll,
       );
-
-      // 添加成功后延迟 2 秒再移除 loading，再刷新列表
-      await Future.delayed(const Duration(seconds: 2));
-      EasyLoading.dismiss();
-
-      Get.snackbar('success'.tr, 'success'.tr);
-
-      // 新增后回到“全部”并刷新（避免二次 loading）
-      currentSidebarKey.value = 'all';
-      await _list.fetch(
-        refresh: true,
-        baseParams: buildFilterParams(),
-        showLoading: false,
-      );
-      await refreshCounts();
-      return true;
-    } catch (e) {
-      EasyLoading.dismiss();
-      _showError(e);
-      return false;
-    }
+    });
+    return ok ?? false;
   }
 }

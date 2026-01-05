@@ -1,4 +1,7 @@
+// Package imports:
 import 'package:get/get.dart';
+
+// Project imports:
 import 'package:readaper/app/shared/widgets/in_app_browser_page.dart';
 
 /// 浏览器服务

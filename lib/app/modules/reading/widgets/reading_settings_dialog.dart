@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:get/get.dart';
+
+// Project imports:
 import '../controllers/reading_controller.dart';
 
 /// 阅读设置弹窗
@@ -70,7 +75,7 @@ class ReadingSettingsDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(30, 8, 30, 24),
       child: PopScope(
-        onPopInvoked: (_) {
+        onPopInvokedWithResult: (_, __) {
           controller.saveSettings(showToast: false);
         },
         child: Obx(() => Column(

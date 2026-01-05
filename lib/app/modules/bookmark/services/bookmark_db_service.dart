@@ -1,8 +1,10 @@
+// Package imports:
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-import '../modules/home/models/bookmark.dart';
-import '../modules/home/models/bookmark_counts.dart';
+// Project imports:
+import '../models/bookmark.dart';
+import '../models/bookmark_counts.dart';
 
 /// 书签本地数据库服务
 ///
@@ -95,6 +97,7 @@ CREATE TABLE $_tableBookmarks (
   /// 更新书签状态（收藏/归档/阅读进度等）
   Future<void> updateBookmark(
     String id, {
+    String? title,
     bool? isMarked,
     bool? isArchived,
     bool? isDeleted,
@@ -106,6 +109,7 @@ CREATE TABLE $_tableBookmarks (
   }) async {
     final db = await _database();
     final values = <String, Object?>{};
+    if (title != null) values['title'] = title;
     if (isMarked != null) values['is_marked'] = isMarked ? 1 : 0;
     if (isArchived != null) values['is_archived'] = isArchived ? 1 : 0;
     if (isDeleted != null) values['is_deleted'] = isDeleted ? 1 : 0;

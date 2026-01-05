@@ -1,5 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:get/get.dart';
+import 'package:readaper/app/config/env.dart';
+
+// Project imports:
 import '../controllers/setting_controller.dart';
 
 /// 设置页
@@ -63,101 +69,6 @@ class SettingView extends GetView<SettingController> {
           ),
         ),
       ),
-    );
-  }
-
-  /// 同步设置
-  Widget _buildSyncSettings(ThemeData theme) {
-    return _buildSection(
-      title: 'syncSettings'.tr,
-      titleBottomPadding: 8,
-      trailing: Obx(() {
-        return IconButton(
-          tooltip: 'syncNow'.tr,
-          onPressed:
-              controller.syncRunning.value ? null : () => controller.syncNow(),
-          icon: controller.syncRunning.value
-              ? const SizedBox(
-                  width: 15,
-                  height: 15,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.sync, size: 20),
-        );
-      }),
-      child: Obx(() {
-        final selectedIndex = controller.selectedSyncTimeframeIndex.value;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(
-                  SettingController.syncTimeframeMinutes.length, (index) {
-                final isSelected = selectedIndex == index;
-                final minutes = SettingController.syncTimeframeMinutes[index];
-                final labelKey =
-                    controller.getSyncTimeframeLabelKeyByMinutes(minutes);
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: GestureDetector(
-                      onTap: () => controller.updateSyncTimeframeIndex(index),
-                      child: Container(
-                        height: 35,
-                        decoration: BoxDecoration(
-                          color: theme.cardColor,
-                          border: isSelected
-                              ? Border.all(
-                                  color: theme.colorScheme.primary,
-                                  width: 1.5,
-                                )
-                              : Border.all(color: Colors.transparent),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          labelKey.tr,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isSelected
-                                ? theme.textTheme.bodyMedium?.color
-                                : theme.textTheme.bodyMedium?.color
-                                    ?.withAlpha(160),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${'lastSync'.tr}：${controller.lastSyncText.value}',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${'nextSync'.tr}：${controller.nextSyncText.value}',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      }),
     );
   }
 
@@ -263,6 +174,101 @@ class SettingView extends GetView<SettingController> {
     );
   }
 
+  /// 同步设置
+  Widget _buildSyncSettings(ThemeData theme) {
+    return _buildSection(
+      title: 'syncSettings'.tr,
+      titleBottomPadding: 8,
+      trailing: Obx(() {
+        return IconButton(
+          tooltip: 'syncNow'.tr,
+          onPressed:
+              controller.syncRunning.value ? null : () => controller.syncNow(),
+          icon: controller.syncRunning.value
+              ? const SizedBox(
+                  width: 15,
+                  height: 15,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.sync, size: 20),
+        );
+      }),
+      child: Obx(() {
+        final selectedIndex = controller.selectedSyncTimeframeIndex.value;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(
+                  SettingController.syncTimeframeMinutes.length, (index) {
+                final isSelected = selectedIndex == index;
+                final minutes = SettingController.syncTimeframeMinutes[index];
+                final labelKey =
+                    controller.getSyncTimeframeLabelKeyByMinutes(minutes);
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: GestureDetector(
+                      onTap: () => controller.updateSyncTimeframeIndex(index),
+                      child: Container(
+                        height: 35,
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          border: isSelected
+                              ? Border.all(
+                                  color: theme.colorScheme.primary,
+                                  width: 1.5,
+                                )
+                              : Border.all(color: Colors.transparent),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          labelKey.tr,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isSelected
+                                ? theme.textTheme.bodyMedium?.color
+                                : theme.textTheme.bodyMedium?.color
+                                    ?.withAlpha(160),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${'lastSync'.tr}：${controller.lastSyncText.value}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${'nextSync'.tr}：${controller.nextSyncText.value}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
   /// 账号信息展示控件
   Widget _buildAccountInfo() {
     return _buildSection(
@@ -307,7 +313,7 @@ class SettingView extends GetView<SettingController> {
       title: 'about'.tr,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Text('${'version'.tr}：0.0.1-202505221',
+        child: Text('${'version'.tr}：${env.version}',
             style: TextStyle(fontSize: 15)),
       ),
     );

@@ -1,11 +1,18 @@
+// Package imports:
 import 'package:get/get.dart';
+
+// Project imports:
+import 'package:readaper/app/modules/bookmark/bookmark.dart';
 import '../controllers/reading_controller.dart';
-import '../../home/providers/bookmark_provider.dart';
+import '../services/reading_content_service.dart';
 
 class ReadingBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => BookmarkProvider());
-    Get.lazyPut(() => ReadingController(Get.find<BookmarkProvider>()));
+    Get.lazyPut(() => ReadingContentService());
+    Get.lazyPut(() => ReadingController(
+          Get.find<BookmarkProvider>(),
+          Get.find<ReadingContentService>(),
+        ));
   }
 }

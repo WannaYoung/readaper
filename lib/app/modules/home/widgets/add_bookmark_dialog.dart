@@ -1,5 +1,52 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:get/get.dart';
+
+class AddBookmarkDialogResult {
+  final String url;
+  final String title;
+
+  AddBookmarkDialogResult({required this.url, required this.title});
+}
+
+Future<AddBookmarkDialogResult?> showAddBookmarkDialog(
+  BuildContext context, {
+  String? initialUrl,
+}) async {
+  final urlController = TextEditingController(text: initialUrl ?? '');
+  final titleController = TextEditingController();
+
+  try {
+    return await showDialog<AddBookmarkDialogResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AddBookmarkDialog(
+          urlController: urlController,
+          titleController: titleController,
+          onConfirm: () async {
+            final url = urlController.text.trim();
+            final title = titleController.text.trim();
+            if (url.isEmpty) {
+              Get.snackbar('failed'.tr, 'fillAllFields'.tr);
+              return;
+            }
+            Navigator.of(dialogContext).pop(
+              AddBookmarkDialogResult(url: url, title: title),
+            );
+          },
+        );
+      },
+    );
+  } finally {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      urlController.dispose();
+      titleController.dispose();
+    });
+  }
+}
 
 class AddBookmarkDialog extends StatelessWidget {
   final TextEditingController urlController;

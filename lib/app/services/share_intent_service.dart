@@ -1,10 +1,13 @@
+// Dart imports:
 import 'dart:async';
 
+// Package imports:
 import 'package:get/get.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
-import '../routes/app_pages.dart';
+// Project imports:
 import '../modules/home/controllers/home_controller.dart';
+import '../routes/app_pages.dart';
 
 class ShareIntentService extends GetxService {
   static ShareIntentService get to => Get.find<ShareIntentService>();
@@ -81,7 +84,7 @@ class ShareIntentService extends GetxService {
     }
 
     pendingUrl.value = null;
-    controller.showAddBookmarkDialog(initialUrl: url);
+    controller.openAddBookmarkDialog(initialUrl: url);
   }
 
   /// HomeController 首帧后可调用一次，确保登录后也能弹出

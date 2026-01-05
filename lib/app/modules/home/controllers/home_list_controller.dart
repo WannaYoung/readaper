@@ -1,11 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
+// Project imports:
+import 'package:readaper/app/modules/bookmark/bookmark.dart';
 import '../../../network/api_client.dart';
-import '../../../services/bookmark_db_service.dart';
-import '../models/bookmark.dart';
-import '../providers/bookmark_provider.dart';
 
 /// 书签列表控制器（分页）
 ///
@@ -13,14 +15,14 @@ import '../providers/bookmark_provider.dart';
 /// - 负责滚动触底自动加载更多
 /// - 不负责“筛选规则”，由外部传入 queryParameters
 class HomeListController extends GetxController {
-  HomeListController(this._provider);
+  HomeListController(this._repository);
 
-  final BookmarkProvider _provider;
-  final BookmarkDbService _db = BookmarkDbService();
+  final BookmarkRepository _repository;
 
-  // 分页大小
+  /// 分页大小
   static const int _pageLimit = 10;
-  // 触底加载更多阈值（距离底部多少像素触发）
+
+  /// 触底加载更多阈值（距离底部多少像素触发）
   static const double _loadMoreThreshold = 100;
 
   final items = <Bookmark>[].obs;
@@ -105,9 +107,7 @@ class HomeListController extends GetxController {
         ...baseParams,
       };
 
-      final list = await _provider.getBookmarksWithParams(params);
-
-      await _db.upsertBookmarks(list);
+      final list = await _repository.fetchBookmarksWithParams(params);
 
       if (refresh) {
         items.assignAll(list);

@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:get/get.dart';
 
+// Project imports:
 import '../controllers/home_controller.dart';
 import '../models/home_layout_settings.dart';
 
@@ -16,7 +20,7 @@ class HomeLayoutDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(30, 8, 30, 24),
       child: PopScope(
-        onPopInvoked: (_) {
+        onPopInvokedWithResult: (_, __) {
           controller.saveHomeLayoutSettings();
         },
         child: Obx(() {
