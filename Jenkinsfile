@@ -11,9 +11,14 @@ pipeline {
 
   stages {
     stage('Android Build') {
-      when { expression { return params.RUN_ANDROID_BUILD } }
-      // 需要 Linux 节点，并预先安装 Flutter，且系统可用 base64。
-      agent { label 'linux' }
+      when {
+        allOf {
+          expression { return params.RUN_ANDROID_BUILD }
+          tag pattern: 'v*', comparator: 'GLOB'
+        }
+      }
+      // 需要 macOS 节点，并预先安装 Flutter，且系统可用 base64。
+      agent { label 'mac' }
       environment {
         // Jenkins 工具配置中需要存在名为 'jdk17' 的 JDK 安装。
         JAVA_HOME = tool(name: 'jdk17', type: 'hudson.model.JDK')
@@ -48,9 +53,14 @@ pipeline {
     }
 
     stage('Android Upload Google Play') {
-      when { expression { return params.RUN_ANDROID_PLAY_UPLOAD } }
-      // 需要 Linux 节点，并预先安装 Flutter/Ruby，且允许安装 gem（fastlane）。
-      agent { label 'linux' }
+      when {
+        allOf {
+          expression { return params.RUN_ANDROID_PLAY_UPLOAD }
+          tag pattern: 'v*', comparator: 'GLOB'
+        }
+      }
+      // 需要 macOS 节点，并预先安装 Flutter/Ruby，且允许安装 gem（fastlane）。
+      agent { label 'mac' }
       environment {
         JAVA_HOME = tool(name: 'jdk17', type: 'hudson.model.JDK')
         PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
@@ -94,7 +104,12 @@ pipeline {
     }
 
     stage('iOS TestFlight') {
-      when { expression { return params.RUN_IOS_TESTFLIGHT } }
+      when {
+        allOf {
+          expression { return params.RUN_IOS_TESTFLIGHT }
+          tag pattern: 'v*', comparator: 'GLOB'
+        }
+      }
       // 需要 macOS 节点：Xcode/Flutter/签名资产（证书与描述文件）。
       agent { label 'mac' }
       steps {
