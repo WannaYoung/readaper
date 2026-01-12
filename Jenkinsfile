@@ -23,7 +23,8 @@ pipeline {
       environment {
         // Jenkins 工具配置中需要存在名为 'jdk17' 的 JDK 安装。
         JAVA_HOME = tool(name: 'jdk17', type: 'hudson.model.JDK')
-        PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
+        PATH = "${env.JAVA_HOME}/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin:${env.PATH}"
+        PATH+FLUTTER = "/Users/yang/fvm/versions/3.35.0/bin"
       }
       steps {
         checkout([
@@ -68,7 +69,8 @@ pipeline {
       agent { label 'mac' }
       environment {
         JAVA_HOME = tool(name: 'jdk17', type: 'hudson.model.JDK')
-        PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
+        PATH = "${env.JAVA_HOME}/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin:${env.PATH}"
+        PATH+FLUTTER = "/Users/yang/fvm/versions/3.35.0/bin"
       }
       steps {
         checkout([
@@ -121,6 +123,10 @@ pipeline {
       }
       // 需要 macOS 节点：Xcode/Flutter/签名资产（证书与描述文件）。
       agent { label 'mac' }
+      environment {
+        PATH = "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin:${env.PATH}"
+        PATH+FLUTTER = "/Users/yang/fvm/versions/3.35.0/bin"
+      }
       steps {
         checkout([
           $class: 'GitSCM',
