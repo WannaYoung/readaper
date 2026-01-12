@@ -1,6 +1,10 @@
 pipeline {
   agent none
 
+  options {
+    skipDefaultCheckout(true)
+  }
+
   // 通过参数控制是否执行各阶段，并选择 Google Play 的发布轨道。
   parameters {
     choice(name: 'ANDROID_TRACK', choices: ['internal', 'alpha', 'beta', 'production'], description: 'Google Play track')
@@ -12,10 +16,7 @@ pipeline {
   stages {
     stage('Android Build') {
       when {
-        allOf {
-          expression { return params.RUN_ANDROID_BUILD }
-          tag pattern: 'v*', comparator: 'GLOB'
-        }
+        expression { return params.RUN_ANDROID_BUILD }
       }
       // 需要 macOS 节点，并预先安装 Flutter，且系统可用 base64。
       agent { label 'mac' }
@@ -61,10 +62,7 @@ pipeline {
 
     stage('Android Upload Google Play') {
       when {
-        allOf {
-          expression { return params.RUN_ANDROID_PLAY_UPLOAD }
-          tag pattern: 'v*', comparator: 'GLOB'
-        }
+        expression { return params.RUN_ANDROID_PLAY_UPLOAD }
       }
       // 需要 macOS 节点，并预先安装 Flutter/Ruby，且允许安装 gem（fastlane）。
       agent { label 'mac' }
@@ -119,10 +117,7 @@ pipeline {
 
     stage('iOS TestFlight') {
       when {
-        allOf {
-          expression { return params.RUN_IOS_TESTFLIGHT }
-          tag pattern: 'v*', comparator: 'GLOB'
-        }
+        expression { return params.RUN_IOS_TESTFLIGHT }
       }
       // 需要 macOS 节点：Xcode/Flutter/签名资产（证书与描述文件）。
       agent { label 'mac' }
