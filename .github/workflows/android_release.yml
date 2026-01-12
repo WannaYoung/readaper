@@ -4,8 +4,8 @@ on:
   # 支持在 GitHub 界面手动触发。
   workflow_dispatch:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   build:

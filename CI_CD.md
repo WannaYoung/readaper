@@ -301,6 +301,30 @@ fastlane ios testflight
 - CI 机器上缺少证书/配置文件是最常见原因
 - 推荐后续引入 `fastlane match` 做签名资产管理
 
+### 9.4 iOS：`pod install` 失败（最低 iOS 版本过低）
+
+现象（GitHub Actions / Jenkins mac 节点常见）：
+
+- 报错提示类似：
+  - `Automatically assigning platform iOS with version 12.0 ... because no platform was specified`
+  - `CocoaPods could not find compatible versions for pod "webview_flutter_wkwebview"`
+  - `... required a higher minimum deployment target`
+
+原因：
+
+- Podfile 未显式设置 `platform :ios, 'x.y'` 时，CocoaPods 可能自动按较低版本（例如 12.0）处理。
+- 某些 Flutter 插件（例如 `webview_flutter_wkwebview`）已要求更高的 iOS 最低版本，因此在 `pod install` 阶段直接失败。
+
+本项目当前修复方式：
+
+- 在 `ios/Podfile` 显式设置：`platform :ios, '13.0'`
+- 同步将 Xcode 工程的 `IPHONEOS_DEPLOYMENT_TARGET` 更新为 `13.0`，保持与 Podfile 一致：
+  - `ios/Runner.xcodeproj/project.pbxproj`
+
+注意：
+
+- 提升最低 iOS 版本会影响你支持的最旧系统版本范围，请在发布前确认你的用户群是否接受。
+
 ---
 
 ## 10. 下一步可选增强
