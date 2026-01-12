@@ -46,6 +46,18 @@ jobs:
             echo "has_keystore=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: 打印签名环境（不包含敏感值）
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then echo "ANDROID_KEYSTORE_BASE64=SET"; else echo "ANDROID_KEYSTORE_BASE64=EMPTY"; fi
+          if [ -n "$ANDROID_KEYSTORE_PASSWORD" ]; then echo "ANDROID_KEYSTORE_PASSWORD=SET"; else echo "ANDROID_KEYSTORE_PASSWORD=EMPTY"; fi
+          if [ -n "$ANDROID_KEY_PASSWORD" ]; then echo "ANDROID_KEY_PASSWORD=SET"; else echo "ANDROID_KEY_PASSWORD=EMPTY"; fi
+          if [ -n "$ANDROID_KEY_ALIAS" ]; then echo "ANDROID_KEY_ALIAS=SET"; else echo "ANDROID_KEY_ALIAS=EMPTY"; fi
+
       # 构建 release AAB（Google Play 上传必须是 AAB）。
       - name: Build App Bundle (release)
         run: flutter build appbundle --release

@@ -29,6 +29,7 @@ android {
         return isBlank(v) ? null : v
     }
 
+    def signingSource = ""
     localKeystorePath = !isBlank(localKeystorePath) ? localKeystorePath : getProp("storeFile")
     keystorePasswordValue = !isBlank(keystorePasswordValue) ? keystorePasswordValue : getProp("storePassword")
     keyAliasValue = !isBlank(keyAliasValue) ? keyAliasValue : getProp("keyAlias")
@@ -36,23 +37,29 @@ android {
 
     def keystorePath = ""
     if (!isBlank(keystoreBase64)) {
+        signingSource = "env_base64"
         def decodedKeystoreFile = new File(buildDir, "ci-upload-keystore.jks")
         decodedKeystoreFile.parentFile.mkdirs()
         decodedKeystoreFile.bytes = java.util.Base64.getMimeDecoder().decode(keystoreBase64)
         keystorePath = decodedKeystoreFile.absolutePath
     } else if (!isBlank(localKeystorePath)) {
+        signingSource = keyPropertiesFile.exists() ? "key_properties" : "env_local_path"
         keystorePath = localKeystorePath
     } else {
         def candidate1 = new File(projectDir, "upload-keystore.jks")
         def candidate2 = new File(projectDir, "keystore.jks")
         if (candidate1.exists()) {
+            signingSource = "android_app_upload_keystore"
             keystorePath = candidate1.absolutePath
         } else if (candidate2.exists()) {
+            signingSource = "android_app_keystore"
             keystorePath = candidate2.absolutePath
         }
     }
 
     def hasSigning = { !isBlank(keystorePath) && !isBlank(keystorePasswordValue) && !isBlank(keyAliasValue) && !isBlank(keyPasswordValue) }
+
+    println "[AndroidSigning] source=${signingSource}, hasSigning=${hasSigning()}"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
