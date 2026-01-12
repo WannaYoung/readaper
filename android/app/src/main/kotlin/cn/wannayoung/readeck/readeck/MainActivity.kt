@@ -1,4 +1,4 @@
-package icn.wannayoung.readaper
+package cn.wannayoung.readaper
 
 import io.flutter.embedding.android.FlutterActivity
 

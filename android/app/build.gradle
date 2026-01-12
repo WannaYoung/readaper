@@ -6,9 +6,14 @@ plugins {
 }
 
 android {
-    namespace = "icn.wannayoung.readaper"
+    namespace = "cn.wannayoung.readaper"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+
+    def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+    def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+    def keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+    def keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -20,16 +25,29 @@ android {
     }
 
     defaultConfig {
-        applicationId = "icn.wannayoung.readaper"
+        applicationId = "cn.wannayoung.readaper"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            if (keystorePath && keystorePassword && keyAlias && keyPassword) {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias keyAlias
+                keyPassword keyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig = (keystorePath && keystorePassword && keyAlias && keyPassword)
+                    ? signingConfigs.release
+                    : signingConfigs.debug
         }
     }
 }

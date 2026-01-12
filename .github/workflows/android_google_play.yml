@@ -1,0 +1,95 @@
+name: Android Google Play
+
+on:
+  # 建议仅手动触发：涉及应用商店发布。
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Google Play track (internal, alpha, beta, production)"
+        required: true
+        default: "internal"
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 拉取仓库代码。
+      - uses: actions/checkout@v4
+
+      # 安装 Flutter SDK。
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.0'
+          cache: true
+
+      # 配置 Java 17（用于 Android/Gradle）。
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # 拉取 Dart/Flutter 依赖。
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # 从 base64 的 Secret 解码 Android keystore（可选）。
+      # 若未配置 Secrets，将在 Gradle 中回退为 debug 签名，避免构建直接失败。
+      - name: Prepare signing
+        id: signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          fi
+
+          if [ -f android/app/upload-keystore.jks ]; then
+            echo "has_keystore=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_keystore=false" >> $GITHUB_OUTPUT
+          fi
+
+      # 构建 release AAB（Google Play 上传必须是 AAB）。
+      - name: Build App Bundle (release)
+        run: flutter build appbundle --release
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ steps.signing.outputs.has_keystore == 'true' && 'upload-keystore.jks' || '' }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ steps.signing.outputs.has_keystore == 'true' && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+          ANDROID_KEY_PASSWORD: ${{ steps.signing.outputs.has_keystore == 'true' && secrets.ANDROID_KEY_PASSWORD || '' }}
+          ANDROID_KEY_ALIAS: ${{ steps.signing.outputs.has_keystore == 'true' && secrets.ANDROID_KEY_ALIAS || '' }}
+
+      # 获取单个 AAB 文件路径（供 fastlane 使用）。
+      - name: Find AAB
+        id: aab
+        run: |
+          AAB_PATH=$(ls -1 build/app/outputs/bundle/release/*.aab | head -n 1)
+          if [ -z "$AAB_PATH" ]; then
+            echo "No AAB found under build/app/outputs/bundle/release" >&2
+            exit 1
+          fi
+          echo "aab_path=$AAB_PATH" >> $GITHUB_OUTPUT
+
+      # 安装 fastlane（包含 supply，用于上传 Play）。
+      - name: Install fastlane
+        run: |
+          sudo gem install fastlane -NV
+
+      # 通过 fastlane supply 上传到 Google Play。
+      # 必需 Secret：GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
+      - name: Upload to Google Play (fastlane)
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          ANDROID_PACKAGE_NAME: cn.wannayoung.readaper
+          PLAY_TRACK: ${{ inputs.track }}
+          AAB_PATH: ${{ steps.aab.outputs.aab_path }}
+        run: |
+          cd android
+          fastlane android play
+
+      # 上传 AAB 产物，便于下载/留档。
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: build/app/outputs/bundle/release/*.aab

@@ -151,7 +151,10 @@ class ReadingView extends GetView<ReadingController> {
                     key: const ValueKey('content'),
                     top: controller.showAppBar.value,
                     bottom: false,
-                    child: _buildMarkdown(),
+                    child: _SwipeToOpenSource(
+                      onTrigger: controller.openSource,
+                      child: _buildMarkdown(),
+                    ),
                   )
                 : const SizedBox.shrink(key: ValueKey('empty')),
           ),
@@ -182,5 +185,47 @@ class ReadingView extends GetView<ReadingController> {
         config: config,
       );
     });
+  }
+}
+
+class _SwipeToOpenSource extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTrigger;
+
+  const _SwipeToOpenSource({
+    required this.child,
+    required this.onTrigger,
+  });
+
+  @override
+  State<_SwipeToOpenSource> createState() => _SwipeToOpenSourceState();
+}
+
+class _SwipeToOpenSourceState extends State<_SwipeToOpenSource> {
+  double _dragDx = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragStart: (_) {
+        _dragDx = 0;
+      },
+      onHorizontalDragUpdate: (details) {
+        _dragDx += details.delta.dx;
+      },
+      onHorizontalDragEnd: (_) {
+        final width = MediaQuery.sizeOf(context).width;
+        final threshold = width * 0.3;
+        if (_dragDx <= -threshold) {
+          widget.onTrigger();
+        }
+        _dragDx = 0;
+      },
+      onHorizontalDragCancel: () {
+        _dragDx = 0;
+      },
+      child: widget.child,
+    );
   }
 }

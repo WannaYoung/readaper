@@ -1,0 +1,33 @@
+default_platform(:android)
+
+platform :android do
+  desc "Upload an existing AAB to Google Play"
+  lane :play do
+    json_key_content = ENV["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"]
+    UI.user_error!("Missing GOOGLE_PLAY_SERVICE_ACCOUNT_JSON") if json_key_content.to_s.strip.empty?
+
+    json_key_path = File.join(Dir.pwd, "fastlane", "service-account.json")
+    File.write(json_key_path, json_key_content)
+
+    track = ENV["PLAY_TRACK"].to_s.strip
+    track = "internal" if track.empty?
+
+    aab_path = ENV["AAB_PATH"].to_s.strip
+    UI.user_error!("Missing AAB_PATH") if aab_path.empty?
+
+    package_name = ENV["ANDROID_PACKAGE_NAME"].to_s.strip
+    UI.user_error!("Missing ANDROID_PACKAGE_NAME") if package_name.empty?
+
+    upload_to_play_store(
+      json_key: json_key_path,
+      package_name: package_name,
+      track: track,
+      aab: aab_path,
+      status: "completed"
+    )
+  ensure
+    if defined?(json_key_path) && File.exist?(json_key_path)
+      File.delete(json_key_path)
+    end
+  end
+end

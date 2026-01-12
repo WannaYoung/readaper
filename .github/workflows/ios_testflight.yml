@@ -1,0 +1,72 @@
+name: iOS TestFlight
+
+on:
+  # 支持在 GitHub 界面手动触发。
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-upload:
+    runs-on: macos-latest
+
+    steps:
+      # 拉取仓库代码。
+      - uses: actions/checkout@v4
+
+      # 安装 Flutter SDK。
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.0'
+          cache: true
+
+      # 拉取 Dart/Flutter 依赖。
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # 安装 fastlane（pilot 用于上传 TestFlight）。
+      - name: Install Ruby gems
+        run: |
+          sudo gem install fastlane -NV
+
+      # 安装 CocoaPods。
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods -NV
+
+      # 安装 iOS pods 依赖。
+      - name: Pod install
+        run: |
+          cd ios
+          pod install
+
+      # 构建用于上架的 IPA。
+      # 注意：runner 上必须具备签名能力（证书/描述文件），否则 build ipa 会失败。
+      - name: Build IPA
+        run: |
+          flutter build ipa --release --export-method app-store
+
+      # 通过 fastlane pilot 上传到 TestFlight。
+      # 必需 Secrets：
+      # - APP_STORE_CONNECT_KEY_ID
+      # - APP_STORE_CONNECT_ISSUER_ID
+      # - APP_STORE_CONNECT_PRIVATE_KEY
+      - name: Upload to TestFlight
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          IOS_BUNDLE_ID: cn.wannayoung.readaper
+          APPLE_TEAM_ID: 5L4C6674RT
+          IPA_PATH: build/ios/ipa/*.ipa
+        run: |
+          cd ios
+          fastlane ios testflight
+
+      # 上传 IPA 产物，便于下载/留档。
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: build/ios/ipa/*.ipa
