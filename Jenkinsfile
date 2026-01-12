@@ -25,7 +25,14 @@ pipeline {
         PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
       }
       steps {
-        checkout scm
+        checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          userRemoteConfigs: scm.userRemoteConfigs,
+          extensions: [
+            [$class: 'CloneOption', shallow: true, depth: 1, noTags: true, timeout: 20]
+          ]
+        ])
         sh 'flutter --version'
         sh 'flutter pub get'
 
@@ -66,7 +73,14 @@ pipeline {
         PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
       }
       steps {
-        checkout scm
+        checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          userRemoteConfigs: scm.userRemoteConfigs,
+          extensions: [
+            [$class: 'CloneOption', shallow: true, depth: 1, noTags: true, timeout: 20]
+          ]
+        ])
         sh 'flutter pub get'
 
         // GOOGLE_PLAY_SERVICE_ACCOUNT_JSON 必须是完整的服务账号 JSON 内容（用于上传 Google Play）。
@@ -113,7 +127,14 @@ pipeline {
       // 需要 macOS 节点：Xcode/Flutter/签名资产（证书与描述文件）。
       agent { label 'mac' }
       steps {
-        checkout scm
+        checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          userRemoteConfigs: scm.userRemoteConfigs,
+          extensions: [
+            [$class: 'CloneOption', shallow: true, depth: 1, noTags: true, timeout: 20]
+          ]
+        ])
         sh 'flutter --version'
         sh 'flutter pub get'
 
