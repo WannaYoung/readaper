@@ -10,10 +10,49 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-    def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
-    def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-    def keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-    def keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+    def isBlank = { v -> v == null || v.toString().trim().isEmpty() }
+
+    def keystoreBase64 = System.getenv("ANDROID_KEYSTORE_BASE64")
+    def keystorePasswordValue = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+    def keyAliasValue = System.getenv("ANDROID_KEY_ALIAS")
+    def keyPasswordValue = System.getenv("ANDROID_KEY_PASSWORD")
+    def localKeystorePath = System.getenv("ANDROID_KEYSTORE_LOCAL_PATH")
+
+    def keyProperties = new Properties()
+    def keyPropertiesFile = rootProject.file("key.properties")
+    if (isBlank(keystoreBase64) && keyPropertiesFile.exists()) {
+        keyProperties.load(new FileInputStream(keyPropertiesFile))
+    }
+
+    def getProp = { String key ->
+        def v = keyProperties.getProperty(key)
+        return isBlank(v) ? null : v
+    }
+
+    localKeystorePath = !isBlank(localKeystorePath) ? localKeystorePath : getProp("storeFile")
+    keystorePasswordValue = !isBlank(keystorePasswordValue) ? keystorePasswordValue : getProp("storePassword")
+    keyAliasValue = !isBlank(keyAliasValue) ? keyAliasValue : getProp("keyAlias")
+    keyPasswordValue = !isBlank(keyPasswordValue) ? keyPasswordValue : getProp("keyPassword")
+
+    def keystorePath = ""
+    if (!isBlank(keystoreBase64)) {
+        def decodedKeystoreFile = new File(buildDir, "ci-upload-keystore.jks")
+        decodedKeystoreFile.parentFile.mkdirs()
+        decodedKeystoreFile.bytes = java.util.Base64.getMimeDecoder().decode(keystoreBase64)
+        keystorePath = decodedKeystoreFile.absolutePath
+    } else if (!isBlank(localKeystorePath)) {
+        keystorePath = localKeystorePath
+    } else {
+        def candidate1 = new File(projectDir, "upload-keystore.jks")
+        def candidate2 = new File(projectDir, "keystore.jks")
+        if (candidate1.exists()) {
+            keystorePath = candidate1.absolutePath
+        } else if (candidate2.exists()) {
+            keystorePath = candidate2.absolutePath
+        }
+    }
+
+    def hasSigning = { !isBlank(keystorePath) && !isBlank(keystorePasswordValue) && !isBlank(keyAliasValue) && !isBlank(keyPasswordValue) }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -34,18 +73,18 @@ android {
 
     signingConfigs {
         release {
-            if (keystorePath && keystorePassword && keyAlias && keyPassword) {
+            if (hasSigning()) {
                 storeFile file(keystorePath)
-                storePassword keystorePassword
-                keyAlias keyAlias
-                keyPassword keyPassword
+                storePassword keystorePasswordValue
+                keyAlias keyAliasValue
+                keyPassword keyPasswordValue
             }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = (keystorePath && keystorePassword && keyAlias && keyPassword)
+            signingConfig = hasSigning()
                     ? signingConfigs.release
                     : signingConfigs.debug
         }

@@ -77,12 +77,68 @@ Fastlane **可以**放在 Flutter 根目录，也可以放在 `ios/` 与 `androi
 
 环境变量：
 
-- `ANDROID_KEYSTORE_PATH`
+- `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
 > 注意：在 CI 上，空字符串和 null 的差异很常见，Gradle 中已使用 Groovy truthy 判断规避误判。
+
+### 3.2 获取 `ANDROID_KEYSTORE_BASE64`（推荐流程）
+
+1) 生成/准备你的 release keystore（例如 `upload-keystore.jks`）
+
+2) 将 keystore 转成 base64（macOS 示例）：
+
+```bash
+base64 -i upload-keystore.jks | pbcopy
+```
+
+3) 在 GitHub 或 Jenkins 的密钥管理中保存：
+
+- GitHub：Settings -> Secrets and variables -> Actions -> New repository secret
+  - `ANDROID_KEYSTORE_BASE64`
+  - `ANDROID_KEYSTORE_PASSWORD`
+  - `ANDROID_KEY_ALIAS`
+  - `ANDROID_KEY_PASSWORD`
+
+说明：
+
+- 本项目的 Gradle 会在构建时将 `ANDROID_KEYSTORE_BASE64` 解码为临时 jks 文件（写入到 build 目录），无需你在 CI 中手动落盘，也无需 `ANDROID_KEYSTORE_PATH`。
+
+### 3.3 本地签名（兼容本地 keystore 文件）
+
+本项目 Android 签名支持以下优先级（从高到低）：
+
+1) **CI/CD 模式**：使用 `ANDROID_KEYSTORE_BASE64`（Gradle 构建时解码到 `build/` 临时文件）
+2) **本地 key.properties**：在 `android/key.properties` 配置 `storeFile/storePassword/keyAlias/keyPassword`
+3) **本地指定路径**：设置环境变量 `ANDROID_KEYSTORE_LOCAL_PATH` 指向你的 keystore 文件绝对路径
+4) **本地默认文件名**：若你将 keystore 放在 `android/app/` 下，并命名为以下任意一个，会被自动识别：
+   - `upload-keystore.jks`
+   - `keystore.jks`
+
+配套环境变量（本地与 CI 通用）：
+
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+推荐做法：
+
+- **不要把 keystore 提交到仓库**。
+- **不要把 `android/key.properties` 提交到仓库**（已在 `.gitignore` 忽略）。
+- 本地推荐：
+  - 复制 `android/key.properties.example` 为 `android/key.properties`
+  - 按以下格式填写（示例）：
+
+```properties
+storeFile=/Users/yang/Develop/key/yang.jks
+storePassword=741113
+keyAlias=wannayoung
+keyPassword=741113
+```
+
+- CI 推荐：使用 `ANDROID_KEYSTORE_BASE64`（GitHub Secrets / Jenkins Credentials）。
 
 ### 3.2 Android 产物路径
 

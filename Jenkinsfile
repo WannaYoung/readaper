@@ -33,13 +33,7 @@ pipeline {
           string(credentialsId: 'ANDROID_KEY_PASSWORD', variable: 'ANDROID_KEY_PASSWORD')
         ]) {
           sh '''
-            if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-              echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-              export ANDROID_KEYSTORE_PATH=upload-keystore.jks
-            else
-              export ANDROID_KEYSTORE_PATH=
-            fi
-
+            export ANDROID_KEYSTORE_BASE64="$ANDROID_KEYSTORE_BASE64"
             export ANDROID_KEYSTORE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
             export ANDROID_KEY_ALIAS="$ANDROID_KEY_ALIAS"
             export ANDROID_KEY_PASSWORD="$ANDROID_KEY_PASSWORD"
@@ -74,13 +68,7 @@ pipeline {
           string(credentialsId: 'GOOGLE_PLAY_SERVICE_ACCOUNT_JSON', variable: 'GOOGLE_PLAY_SERVICE_ACCOUNT_JSON')
         ]) {
           sh '''
-            if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-              echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
-              export ANDROID_KEYSTORE_PATH=upload-keystore.jks
-            else
-              export ANDROID_KEYSTORE_PATH=
-            fi
-
+            export ANDROID_KEYSTORE_BASE64="$ANDROID_KEYSTORE_BASE64"
             export ANDROID_KEYSTORE_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
             export ANDROID_KEY_ALIAS="$ANDROID_KEY_ALIAS"
             export ANDROID_KEY_PASSWORD="$ANDROID_KEY_PASSWORD"
